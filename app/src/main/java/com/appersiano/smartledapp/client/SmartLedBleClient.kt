@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * SmartLedBleClient let you communicate with the Smart Led Device
+ * SmartLedBleClient let you communicate with the Smart Led Cradle Device
  */
 private const val TAG = "SmartLedBleClient"
 
@@ -30,16 +30,13 @@ class SmartLedBleClient(private val context: Context) {
 
     //region Mutable State Flow
     private val _deviceConnectionStatus = MutableStateFlow<SDeviceStatus>(SDeviceStatus.UNKNOWN)
-//    val deviceConnectionStatus = _deviceConnectionStatus.asStateFlow()
-//    private val _deviceInfoState = MutableStateFlow<DeviceInfo?>(null)
-//    val deviceInfoState = _deviceInfoState.asStateFlow()
     //endregion
 
     private lateinit var mMacAddress: String
 
     //region Basic Connect/Disconnect
     /**
-     * Connect to the safety cushion by macAddress
+     * Connect to the Cradle Smart Light by macAddress
      *
      * @param macAddress the macAddress of the safety cushion
      */
@@ -70,98 +67,124 @@ class SmartLedBleClient(private val context: Context) {
     }
     //endregion
 
-    @SuppressLint("MissingPermission")
-    fun readDeviceInfo(): Boolean? {
-        val service = mBluetoothGatt?.getService(SmartLedUUID.DeviceInformation.uuid)
-        val characteristic =
-            service?.getCharacteristic(SmartLedUUID.DeviceInformation.FWRevisionString.uuid)
-
-        characteristic?.let {
-            return mBluetoothGatt?.readCharacteristic(characteristic)
-        } ?: kotlin.run {
-            return false
-        }
-    }
-
-    //endregion Read
-
     //region Write
-    @SuppressLint("MissingPermission")
-    fun switchLED(value: ESwitch): Boolean? {
-        val service = mBluetoothGatt?.getService(SmartLedUUID.HardwareControlService.uuid)
+    /**
+     * Turn ON / OFF the LED
+     *
+     * @param value ESwitch.ON select on/off status
+     */
+    fun setLEDStatus(value: ESwitch): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
         val characteristic =
-            service?.getCharacteristic(SmartLedUUID.HardwareControlService.LEDControl.uuid)
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.LEDStatus.uuid)
 
         val payload = byteArrayOf(value.value.toByte())
         return sendCommand(characteristic, payload)
     }
 
-    @SuppressLint("MissingPermission")
-    fun switchPIR(value: ESwitch): Boolean? {
-        val service = mBluetoothGatt?.getService(SmartLedUUID.LEDService.uuid)
-        val characteristic =
-            service?.getCharacteristic(SmartLedUUID.HardwareControlService.PIRControl.uuid)
-
-        val payload = byteArrayOf(value.value.toByte())
-        return sendCommand(characteristic, payload)
-    }
-
+    /**
+     * Change LED Color by using RGB value
+     *
+     * @param red Red Color
+     * @param green Green Color
+     * @param blue Blue Color
+     */
     fun setLEDColor(
         @IntRange(from = 0L, to = 255L) red: Long,
         @IntRange(from = 0L, to = 255L) green: Long,
         @IntRange(from = 0L, to = 255L) blue: Long
     ): Boolean? {
-        val service = mBluetoothGatt?.getService(SmartLedUUID.LEDService.uuid)
-        val characteristic = service?.getCharacteristic(SmartLedUUID.LEDService.LEDColor.uuid)
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.LEDColor.uuid)
 
         val payload = byteArrayOf(red.toByte(), green.toByte(), blue.toByte())
         return sendCommand(characteristic, payload)
     }
 
+    /**
+     * Set PIR funcionality ON / OFF
+     *
+     * @param value use ESwitch ON/OFF
+     */
+    fun switchPIR(value: ESwitch): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.PIRStatus.uuid)
+
+        val payload = byteArrayOf(value.value.toByte())
+        return sendCommand(characteristic, payload)
+    }
+
+
+    /**
+     * Set LED Brightness.
+     *
+     * @param brightness range 0-100
+     */
     fun setLEDBrightness(@IntRange(from = 0L, to = 100L) brightness: Long): Boolean? {
-        val service = mBluetoothGatt?.getService(SmartLedUUID.LEDService.uuid)
-        val characteristic = service?.getCharacteristic(SmartLedUUID.LEDService.LEDBrightness.uuid)
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.LEDBrightness.uuid)
 
         val payload = byteArrayOf(brightness.toByte())
         return sendCommand(characteristic, payload)
     }
 
+    /**
+     * Set the current time to the device to perform automatica turn on/off
+     *
+     * @param hour Current hour of the day (0-23)
+     * @param minute Current minute of the day (0-59)
+     * @param second Current second of the day (0-59)
+     * @param day Current day of the month (1-31)
+     * @param month Current month of the year (1-12)
+     * @param year Current year calculated on 2000 + x (0 <= x <= 255)
+     */
     fun setCurrentTime(
         @IntRange(from = 0L, to = 23L) hour: Int,
         @IntRange(from = 0L, to = 59) minute: Int,
-        @IntRange(from = 0L, to = 59L) second: Int
+        @IntRange(from = 0L, to = 59L) second: Int,
+        @IntRange(from = 1L, to = 31L) day: Int,
+        @IntRange(from = 1L, to = 12L) month: Int,
+        @IntRange(from = 0L, to = 255L) year: Int,
     ): Boolean? {
 
-        val service = mBluetoothGatt?.getService(SmartLedUUID.HardwareControlService.uuid)
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
         val characteristic =
-            service?.getCharacteristic(SmartLedUUID.HardwareControlService.CurrentTime.uuid)
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.CurrentTime.uuid)
 
         val payload = byteArrayOf(hour.toByte(), minute.toByte(), second.toByte())
         return sendCommand(characteristic, payload)
     }
 
-    fun setTimer(
-        addOrRemove: Int,
-        @IntRange(from = 0L, to = 23L) turnOnHour: Int,
-        @IntRange(from = 0L, to = 59) turnOnMinute: Int,
-        @IntRange(from = 0L, to = 59L) turnOnSecond: Int,
-        @IntRange(from = 0L, to = 23L) turnOffHour: Int,
-        @IntRange(from = 0L, to = 59) turnOffMinute: Int,
-        @IntRange(from = 0L, to = 59L) turnOffSecond: Int,
+    /**
+     * Set the timer to let the LED turn ON/OFF automatically
+     *
+     * @param timerFeatureStatus set status ON/OFF
+     * @param switchONHour Set hour when the LED turn ON (0-23)
+     * @param switchOnMinute Set minute of switchONHour when the LED turn ON (0-59)
+     * @param switchOFFHour Set hour when the LED turn ON (0-23)
+     * @param switchOFFMinute Set minute of switchOFFHour when the LED turn ON (0-59)
+     */
+    fun setTimerFeature(
+        timerFeatureStatus: ESwitch,
+        @IntRange(from = 0L, to = 23L) switchONHour: Int,
+        @IntRange(from = 0L, to = 59) switchOnMinute: Int,
+        @IntRange(from = 0L, to = 23L) switchOFFHour: Int,
+        @IntRange(from = 0L, to = 59) switchOFFMinute: Int,
     ): Boolean? {
 
-        val service = mBluetoothGatt?.getService(SmartLedUUID.LEDService.uuid)
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
         val characteristic =
-            service?.getCharacteristic(SmartLedUUID.HardwareControlService.PIRControl.uuid)
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.TimerFeature.uuid)
 
         val payload = byteArrayOf(
-            addOrRemove.toByte(),
-            turnOnHour.toByte(),
-            turnOnMinute.toByte(),
-            turnOnSecond.toByte(),
-            turnOffHour.toByte(),
-            turnOffMinute.toByte(),
-            turnOffSecond.toByte(),
+            timerFeatureStatus.value.toByte(),
+            switchONHour.toByte(),
+            switchOnMinute.toByte(),
+            switchOFFHour.toByte(),
+            switchOFFMinute.toByte(),
         )
         return sendCommand(characteristic, payload)
     }
