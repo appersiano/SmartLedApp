@@ -9,21 +9,24 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.ParcelUuid
 import android.util.Log
 import androidx.annotation.IntRange
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.appersiano.smartledapp.client.SmartLedUUID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.util.*
 import java.util.concurrent.TimeUnit
 
-private const val TAG = "AbstractBeaconScanner"
+private const val TAG = "CradleScanner"
 
 /**
- * BleScanner define the mechanism to scan and find iBeacon devices.
+ * BleScanner define the mechanism to scan and find Ble devices.
  */
-class BleScanner(private val context: Context) {
+class CradleSmartLEDBleScanner(private val context: Context) {
 
     private var localScope = CoroutineScope(Dispatchers.IO)
     private var scanningScope = CoroutineScope(Dispatchers.IO)
@@ -31,7 +34,9 @@ class BleScanner(private val context: Context) {
     private val _bleManager =
         context.getSystemService(AppCompatActivity.BLUETOOTH_SERVICE) as BluetoothManager
 
-    private val scanFilter = ScanFilter.Builder().build()
+    private val scanFilter =
+        ScanFilter.Builder().setServiceUuid(ParcelUuid(SmartLedUUID.CradleSmartLightService.uuid))
+            .build()
     private val scanSettings =
         ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_POWER).build()
     private val setMatches = hashMapOf<String, ScanResult>()
@@ -49,13 +54,12 @@ class BleScanner(private val context: Context) {
                 localScope.launch {
                     val elementExist = setMatches[it.device.address]
                     if (elementExist == null) {
-                        Log.i(TAG, "iBeacon detected: " + it.device.address)
+                        Log.i(TAG, "Smart LED detected: " + it.device.address)
                         setMatches[it.device.address] = it
                         scanResultFlow.send(it)
                     } else {
                         Log.i(TAG, "Exist Element - SKIP " + it.device.address)
                     }
-
                 }
             }
         }
