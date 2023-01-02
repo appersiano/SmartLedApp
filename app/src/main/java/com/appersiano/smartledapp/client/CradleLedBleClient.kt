@@ -16,11 +16,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * SmartLedBleClient let you communicate with the Smart Led Cradle Device
+ * CradleLedBleClient let you communicate with the Smart Led Cradle Device
  */
-private const val TAG = "SmartLedBleClient"
+private const val TAG = "CradleLedBleClient"
 
-class SmartLedBleClient(private val context: Context) {
+class CradleLedBleClient(private val context: Context) {
 
     private var mBluetoothGatt: BluetoothGatt? = null
     private val bleManager =

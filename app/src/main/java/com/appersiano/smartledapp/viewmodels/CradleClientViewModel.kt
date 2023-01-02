@@ -4,7 +4,7 @@ import android.app.Application
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import com.appersiano.smartledapp.client.SmartLedBleClient
+import com.appersiano.smartledapp.client.CradleLedBleClient
 
 /**
  * PadClientViewModel is in charge to manage the communication with the safety cushion
@@ -20,7 +20,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     private var otaAppLoaderFileURI: Uri? = null
 
 
-    private val padClient by lazy { SmartLedBleClient(application) }
+    private val padClient by lazy { CradleLedBleClient(application) }
 
     //region MutableStateFlow
 
