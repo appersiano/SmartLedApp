@@ -1,50 +1,66 @@
 package com.appersiano.smartledapp.viewmodels
 
 import android.app.Application
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import com.appersiano.smartledapp.client.CradleLedBleClient
 
-/**
- * PadClientViewModel is in charge to manage the communication with the safety cushion
- */
 private const val TAG = "CradleClientViewModel"
 
 class CradleClientViewModel(application: Application) : AndroidViewModel(application) {
 
-    private var appPath: String? = null
-    private var stackPath: String? = null
-
-    private var otaApplicationFileURI: Uri? = null
-    private var otaAppLoaderFileURI: Uri? = null
-
-
-    private val padClient by lazy { CradleLedBleClient(application) }
+    private val bleClient by lazy { CradleLedBleClient(application) }
 
     //region MutableStateFlow
-
+    val bleDeviceStatus = bleClient.deviceConnectionStatus
     //endregion
 
     fun connect(macAddress: String) {
-        padClient.connect(macAddress)
+        bleClient.connect(macAddress)
     }
 
     fun disconnect() {
-        padClient.disconnect()
+        bleClient.disconnect()
     }
 
-    fun writeKey(value: String) {
-
+    fun setLEDStatus(value: Boolean) {
+        if (value) {
+            bleClient.setLEDStatus(CradleLedBleClient.ESwitch.ON)
+        } else {
+            bleClient.setLEDStatus(CradleLedBleClient.ESwitch.OFF)
+        }
     }
 
-    fun enableOnBoardNotification(value: Boolean) {
+    fun setPIRStatus(value: Boolean) {
+        if (value) {
+            bleClient.setPIRStatus(CradleLedBleClient.ESwitch.ON)
+        } else {
+            bleClient.setPIRStatus(CradleLedBleClient.ESwitch.OFF)
+        }
+    }
 
+    fun setLEDColor(red: Long, green: Long, blue: Long) {
+        bleClient.setLEDColor(red, green, blue)
+    }
+
+    fun setLEDBrightness(value: Long) {
+        bleClient.setLEDBrightness(value)
+    }
+
+    fun setCurrentTime(hour: Int, minute: Int, second: Int, day: Int, month: Int, year: Int) {
+        bleClient.setCurrentTime(hour, minute, second, day, month, year)
+    }
+
+    fun setTimerFeature(value : Boolean, hourON: Int, minuteON: Int, hourOFF: Int, minuteOFF: Int) {
+        if (value){
+            bleClient.setTimerFeature(CradleLedBleClient.ESwitch.ON, hourON, minuteON, hourOFF, minuteOFF)
+        } else {
+            bleClient.setTimerFeature(CradleLedBleClient.ESwitch.OFF, hourON, minuteON, hourOFF, minuteOFF)
+        }
     }
 
     override fun onCleared() {
         super.onCleared()
         Log.i(TAG, "onCleared: ")
     }
-
 }

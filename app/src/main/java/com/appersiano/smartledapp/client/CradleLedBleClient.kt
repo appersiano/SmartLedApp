@@ -13,6 +13,7 @@ import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -30,6 +31,7 @@ class CradleLedBleClient(private val context: Context) {
 
     //region Mutable State Flow
     private val _deviceConnectionStatus = MutableStateFlow<SDeviceStatus>(SDeviceStatus.UNKNOWN)
+    val deviceConnectionStatus = _deviceConnectionStatus as StateFlow<SDeviceStatus>
     //endregion
 
     private lateinit var mMacAddress: String
@@ -83,6 +85,20 @@ class CradleLedBleClient(private val context: Context) {
     }
 
     /**
+     * Set PIR funcionality ON / OFF
+     *
+     * @param value use ESwitch ON/OFF
+     */
+    fun setPIRStatus(value: ESwitch): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.PIRStatus.uuid)
+
+        val payload = byteArrayOf(value.value.toByte())
+        return sendCommand(characteristic, payload)
+    }
+
+    /**
      * Change LED Color by using RGB value
      *
      * @param red Red Color
@@ -101,21 +117,6 @@ class CradleLedBleClient(private val context: Context) {
         val payload = byteArrayOf(red.toByte(), green.toByte(), blue.toByte())
         return sendCommand(characteristic, payload)
     }
-
-    /**
-     * Set PIR funcionality ON / OFF
-     *
-     * @param value use ESwitch ON/OFF
-     */
-    fun switchPIR(value: ESwitch): Boolean? {
-        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
-        val characteristic =
-            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.PIRStatus.uuid)
-
-        val payload = byteArrayOf(value.value.toByte())
-        return sendCommand(characteristic, payload)
-    }
-
 
     /**
      * Set LED Brightness.
