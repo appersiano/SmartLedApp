@@ -70,14 +70,14 @@ fun DetailScreen(
         }
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
         Row(Modifier.height(IntrinsicSize.Min)) {
-            setLEDStatus(viewModel)
+            SetLEDStatus(viewModel)
             Divider(
                 modifier = Modifier
                     .fillMaxHeight()  //fill the max height
                     .width(1.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
-            setPIRStatus(viewModel)
+            SetPIRStatus(viewModel)
             Divider(
                 modifier = Modifier
                     .fillMaxHeight()  //fill the max height
@@ -85,18 +85,18 @@ fun DetailScreen(
             )
         }
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
-        setLEDColor(viewModel)
+        SetLEDColor(viewModel)
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
-        setLEDBrightness(viewModel)
+        SetLEDBrightness(viewModel)
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
-        setCurrentTime(viewModel)
+        SetCurrentTime(viewModel)
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
-        setTimerFeature(viewModel)
+        SetTimerFeature(viewModel)
     }
 }
 
 @Composable
-fun setTimerFeature(viewModel: CradleClientViewModel) {
+fun SetTimerFeature(viewModel: CradleClientViewModel) {
     val switchValue = remember { mutableStateOf(false) }
 
     val hourONValue = remember { mutableStateOf(0) }
@@ -181,7 +181,7 @@ fun setTimerFeature(viewModel: CradleClientViewModel) {
 }
 
 @Composable
-fun setCurrentTime(viewModel: CradleClientViewModel) {
+fun SetCurrentTime(viewModel: CradleClientViewModel) {
     val hourValue = remember { mutableStateOf(0) }
     val minuteValue = remember { mutableStateOf(0) }
     val secondValue = remember { mutableStateOf(0) }
@@ -266,7 +266,7 @@ fun setCurrentTime(viewModel: CradleClientViewModel) {
 }
 
 @Composable
-fun setLEDBrightness(viewModel: CradleClientViewModel) {
+fun SetLEDBrightness(viewModel: CradleClientViewModel) {
     val sliderBrightness = remember { mutableStateOf(0f) }
     Row {
         Icon(
@@ -293,9 +293,9 @@ fun setLEDBrightness(viewModel: CradleClientViewModel) {
 }
 
 @Composable
-private fun setLEDColor(viewModel: CradleClientViewModel) {
+private fun SetLEDColor(viewModel: CradleClientViewModel) {
 
-    val RGBColor = remember { mutableStateOf(Color.Red) }
+    val mRGBColor = remember { mutableStateOf(Color.Red) }
 
     val textValueRed = remember { mutableStateOf(0f) }
     val sliderPositionRed = remember { mutableStateOf(0f) }
@@ -322,7 +322,7 @@ private fun setLEDColor(viewModel: CradleClientViewModel) {
             Box(
                 modifier = Modifier
                     .padding(start = 20.dp, end = 20.dp)
-                    .background(RGBColor.value, shape = CircleShape)
+                    .background(mRGBColor.value, shape = CircleShape)
                     .requiredSize(25.dp)
             )
         }
@@ -339,7 +339,7 @@ private fun setLEDColor(viewModel: CradleClientViewModel) {
             onValueChangeFinished = {
                 textValueRed.value = sliderPositionRed.value
                 updateCircleRGBColor(
-                    RGBColor,
+                    mRGBColor,
                     sliderPositionRed.value,
                     sliderPositionGreen.value,
                     sliderPositionBlue.value
@@ -362,7 +362,7 @@ private fun setLEDColor(viewModel: CradleClientViewModel) {
             onValueChangeFinished = {
                 textValueGreen.value = sliderPositionGreen.value
                 updateCircleRGBColor(
-                    RGBColor,
+                    mRGBColor,
                     sliderPositionRed.value,
                     sliderPositionGreen.value,
                     sliderPositionBlue.value
@@ -386,7 +386,7 @@ private fun setLEDColor(viewModel: CradleClientViewModel) {
             onValueChangeFinished = {
                 textValueBlue.value = sliderPositionBlue.value
                 updateCircleRGBColor(
-                    RGBColor,
+                    mRGBColor,
                     sliderPositionRed.value,
                     sliderPositionGreen.value,
                     sliderPositionBlue.value
@@ -417,7 +417,7 @@ fun updateCircleRGBColor(RGBColor: MutableState<Color>, red: Float, green: Float
 }
 
 @Composable
-private fun setLEDStatus(viewModel: CradleClientViewModel) {
+private fun SetLEDStatus(viewModel: CradleClientViewModel) {
     val checkedLed = remember { mutableStateOf(false) }
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Text(
@@ -443,7 +443,7 @@ private fun setLEDStatus(viewModel: CradleClientViewModel) {
 }
 
 @Composable
-private fun setPIRStatus(viewModel: CradleClientViewModel) {
+private fun SetPIRStatus(viewModel: CradleClientViewModel) {
     val checkedLed = remember { mutableStateOf(false) }
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Text(
