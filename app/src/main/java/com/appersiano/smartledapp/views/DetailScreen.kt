@@ -38,7 +38,7 @@ fun DetailScreen(
     val scrollState = rememberScrollState()
     Column(
         Modifier
-            .padding(16.dp)
+            .padding(24.dp)
             .verticalScroll(scrollState)
     ) {
         Text(
@@ -281,20 +281,30 @@ fun SetLEDBrightness(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.size(5.dp))
         Text(text = "Brightness")
         Spacer(modifier = Modifier.size(5.dp))
-        Text(text = "0")
+        Text(text = sliderBrightness.value.toInt().toString())
     }
     Slider(
         value = sliderBrightness.value,
-        onValueChange = { sliderBrightness.value = it },
-        valueRange = 0f..100f,
-        onValueChangeFinished = {
+        onValueChange = {
+            sliderBrightness.value = it
             viewModel.setLEDBrightness(sliderBrightness.value.toLong())
         },
+        valueRange = 0f..100f,
         colors = SliderDefaults.colors(
             thumbColor = MaterialTheme.colors.primary,
             activeTrackColor = MaterialTheme.colors.primary
         )
     )
+    Button(
+        onClick = {
+            viewModel.setLEDBrightness(
+                sliderBrightness.value.toLong()
+            )
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text = "Set LED Brightness")
+    }
 }
 
 @Composable
@@ -317,6 +327,10 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
                 .height(IntrinsicSize.Min)
                 .fillMaxWidth()
         ) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_baseline_color_lens_24),
+                contentDescription = "Brightness"
+            )
             Text(
                 modifier = Modifier
                     .fillMaxHeight()
