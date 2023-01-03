@@ -101,7 +101,6 @@ fun DevicePickerItem(navController: NavController, macAddress: String, rssi: Int
         ClickableText(
             text = AnnotatedString("MacAddress: $macAddress"),
             style = TextStyle(
-                color = Color.White,
                 fontSize = 20.sp
             ),
             modifier = Modifier
