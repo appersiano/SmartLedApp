@@ -1,6 +1,9 @@
 package com.appersiano.smartledapp.views
 
+import android.app.Application
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,9 +17,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appersiano.smartledapp.R
 import com.appersiano.smartledapp.client.CradleLedBleClient
@@ -34,7 +39,7 @@ fun DetailScreen(
     Column(
         Modifier
             .padding(16.dp)
-            .verticalScroll(scrollState, reverseScrolling = true)
+            .verticalScroll(scrollState)
     ) {
         Text(
             modifier = Modifier
@@ -297,14 +302,14 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
 
     val mRGBColor = remember { mutableStateOf(Color.Red) }
 
-    val textValueRed = remember { mutableStateOf(0f) }
-    val sliderPositionRed = remember { mutableStateOf(0f) }
+    val textValueRed = remember { mutableStateOf(0) }
+    val sliderPositionRed = remember { mutableStateOf(0) }
 
-    val textValueGreen = remember { mutableStateOf(0f) }
-    val sliderPositionGreen = remember { mutableStateOf(0f) }
+    val textValueGreen = remember { mutableStateOf(0) }
+    val sliderPositionGreen = remember { mutableStateOf(0) }
 
-    val textValueBlue = remember { mutableStateOf(0f) }
-    val sliderPositionBlue = remember { mutableStateOf(0f) }
+    val textValueBlue = remember { mutableStateOf(0) }
+    val sliderPositionBlue = remember { mutableStateOf(0) }
 
     Column {
         Row(
@@ -333,10 +338,9 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
             Text(text = textValueRed.value.toString())
         }
         Slider(
-            value = sliderPositionRed.value,
-            onValueChange = { sliderPositionRed.value = it },
-            valueRange = 0f..255f,
-            onValueChangeFinished = {
+            value = sliderPositionRed.value.toFloat(),
+            onValueChange = {
+                sliderPositionRed.value = it.toInt()
                 textValueRed.value = sliderPositionRed.value
                 updateCircleRGBColor(
                     mRGBColor,
@@ -345,6 +349,7 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
                     sliderPositionBlue.value
                 )
             },
+            valueRange = 0f..255f,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colors.primary,
                 activeTrackColor = MaterialTheme.colors.primary
@@ -356,10 +361,9 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
             Text(text = textValueGreen.value.toString())
         }
         Slider(
-            value = sliderPositionGreen.value,
-            onValueChange = { sliderPositionGreen.value = it },
-            valueRange = 0f..255f,
-            onValueChangeFinished = {
+            value = sliderPositionGreen.value.toFloat(),
+            onValueChange = {
+                sliderPositionGreen.value = it.toInt()
                 textValueGreen.value = sliderPositionGreen.value
                 updateCircleRGBColor(
                     mRGBColor,
@@ -368,6 +372,7 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
                     sliderPositionBlue.value
                 )
             },
+            valueRange = 0f..255f,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colors.primary,
                 activeTrackColor = MaterialTheme.colors.primary
@@ -380,10 +385,9 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
             Text(text = textValueBlue.value.toString())
         }
         Slider(
-            value = sliderPositionBlue.value,
-            onValueChange = { sliderPositionBlue.value = it },
-            valueRange = 0f..255f,
-            onValueChangeFinished = {
+            value = sliderPositionBlue.value.toFloat(),
+            onValueChange = {
+                sliderPositionBlue.value = it.toInt()
                 textValueBlue.value = sliderPositionBlue.value
                 updateCircleRGBColor(
                     mRGBColor,
@@ -392,6 +396,7 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
                     sliderPositionBlue.value
                 )
             },
+            valueRange = 0f..255f,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colors.primary,
                 activeTrackColor = MaterialTheme.colors.primary
@@ -412,8 +417,9 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
     }
 }
 
-fun updateCircleRGBColor(RGBColor: MutableState<Color>, red: Float, green: Float, blue: Float) {
-    RGBColor.value = Color(red, green, blue)
+fun updateCircleRGBColor(RGBColor: MutableState<Color>, red: Int, green: Int, blue: Int) {
+    val color = android.graphics.Color.rgb(red, green, blue)
+    RGBColor.value = Color(color)
 }
 
 @Composable
@@ -477,10 +483,24 @@ fun getStatusColor(status: CradleLedBleClient.SDeviceStatus): Color {
     }
 }
 
+@Preview
+@Composable
+fun PrevieColor() {
+    val color = android.graphics.Color.rgb(255, 0, 0)
+    Box(
+        modifier = Modifier
+            .size(30.dp)
+            .background(color = Color(color), shape = RectangleShape)
+    ) {
+
+    }
+}
+
 //@Preview(showSystemUi = true)
 //@Composable
 //fun previewDetail() {
 //    DetailScreen(
+//        viewModel = //,
 //        "00:11:22:33:44:55",
 //        onConnect = {},
 //        onDisconnect = {},
