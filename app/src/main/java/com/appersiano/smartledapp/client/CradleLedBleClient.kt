@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.util.Log
 import androidx.annotation.IntRange
@@ -12,7 +13,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
@@ -32,6 +35,24 @@ class CradleLedBleClient(private val context: Context) {
     //region Mutable State Flow
     private val _deviceConnectionStatus = MutableStateFlow<SDeviceStatus>(SDeviceStatus.UNKNOWN)
     val deviceConnectionStatus = _deviceConnectionStatus as StateFlow<SDeviceStatus>
+
+    private val _ledStatus = MutableSharedFlow<ESwitch>()
+    val ledStatus = _ledStatus as SharedFlow<ESwitch>
+
+    private val _pirStatus = MutableSharedFlow<ESwitch>()
+    val pirStatus = _pirStatus as SharedFlow<ESwitch>
+
+    private val _ledColor = MutableSharedFlow<Color>()
+    val ledColor = _ledColor as SharedFlow<Color>
+
+    private val _brightness = MutableSharedFlow<Int>()
+    val brightness = _brightness as SharedFlow<Int>
+
+    private val _currentTime = MutableSharedFlow<CurrentTimeDTO>()
+    val currentTime = _currentTime as SharedFlow<CurrentTimeDTO>
+
+    private val _featureTime = MutableSharedFlow<FeatureTimerDTO>()
+    val featureTime = _featureTime as SharedFlow<FeatureTimerDTO>
     //endregion
 
     private lateinit var mMacAddress: String
@@ -85,7 +106,7 @@ class CradleLedBleClient(private val context: Context) {
     }
 
     /**
-     * Set PIR funcionality ON / OFF
+     * Set PIR functionality ON / OFF
      *
      * @param value use ESwitch ON/OFF
      */
@@ -218,6 +239,82 @@ class CradleLedBleClient(private val context: Context) {
 
     //endregion
 
+    //region Read
+    /**
+     * Read current LED Switch Status
+     *
+     */
+    @SuppressLint("MissingPermission")
+    fun readLEDStatus(): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.LEDStatus.uuid)
+
+        return mBluetoothGatt?.readCharacteristic(characteristic)
+    }
+
+    /**
+     * Read PIR status ON / OFF
+     *
+     */
+    @SuppressLint("MissingPermission")
+    fun readPIRStatus(): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.PIRStatus.uuid)
+
+        return mBluetoothGatt?.readCharacteristic(characteristic)
+    }
+
+    /**
+     * Read LED current color
+     */
+    @SuppressLint("MissingPermission")
+    fun readLEDColor(): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.LEDColor.uuid)
+
+        return mBluetoothGatt?.readCharacteristic(characteristic)
+    }
+
+    /**
+     * Read current brightness level
+     */
+    @SuppressLint("MissingPermission")
+    fun readLEDBrightness(): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.LEDBrightness.uuid)
+
+        return mBluetoothGatt?.readCharacteristic(characteristic)
+    }
+
+    /**
+     * Read current time setted
+     */
+    @SuppressLint("MissingPermission")
+    fun readCurrentTime(): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.CurrentTime.uuid)
+
+        return mBluetoothGatt?.readCharacteristic(characteristic)
+    }
+
+    /**
+     * Read Timer Feature
+     */
+    @SuppressLint("MissingPermission")
+    fun readTimerFeature(): Boolean? {
+        val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
+        val characteristic =
+            service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.TimerFeature.uuid)
+
+        return mBluetoothGatt?.readCharacteristic(characteristic)
+    }
+    //endregion
+
     @SuppressLint("MissingPermission")
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onPhyUpdate(gatt: BluetoothGatt?, txPhy: Int, rxPhy: Int, status: Int) {
@@ -269,6 +366,77 @@ class CradleLedBleClient(private val context: Context) {
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
             Log.d(TAG, "📖 onCharacteristicRead: ${characteristic?.uuid}")
+            when (characteristic?.uuid) {
+                SmartLedUUID.CradleSmartLightService.LEDStatus.uuid -> {
+                    val ledStatus = characteristic.value[0]
+                    localScopeStatus.launch {
+                        _ledStatus.emit(ESwitch.fromInt(ledStatus.toInt()))
+                    }
+                }
+                SmartLedUUID.CradleSmartLightService.PIRStatus.uuid -> {
+                    val pirStatus = characteristic.value[0]
+                    localScopeStatus.launch {
+                        _pirStatus.emit(ESwitch.fromInt(pirStatus.toInt()))
+                    }
+                }
+                SmartLedUUID.CradleSmartLightService.LEDColor.uuid -> {
+                    val red = characteristic.value[0]
+                    val green = characteristic.value[1]
+                    val blue = characteristic.value[2]
+                    val color = Color.valueOf(red.toFloat(), green.toFloat(), blue.toFloat())
+
+                    localScopeStatus.launch {
+                        _ledColor.emit(color)
+                    }
+                }
+                SmartLedUUID.CradleSmartLightService.LEDBrightness.uuid -> {
+                    val brightness = characteristic.value[0]
+
+                    localScopeStatus.launch {
+                        _brightness.emit(brightness.toInt())
+                    }
+                }
+                SmartLedUUID.CradleSmartLightService.CurrentTime.uuid -> {
+                    val currentHour = characteristic.value[0]
+                    val currentMinute = characteristic.value[1]
+                    val currentSecond = characteristic.value[2]
+                    val currentDay = characteristic.value[3]
+                    val currentMonth = characteristic.value[4]
+                    val currentYear = characteristic.value[5]
+
+                    val currentTimeDTO = CurrentTimeDTO(
+                        currentHour.toInt(),
+                        currentMinute.toInt(),
+                        currentSecond.toInt(),
+                        currentDay.toInt(),
+                        currentMonth.toInt(),
+                        currentYear.toInt()
+                    )
+
+                    localScopeStatus.launch {
+                        _currentTime.emit(currentTimeDTO)
+                    }
+                }
+                SmartLedUUID.CradleSmartLightService.TimerFeature.uuid -> {
+                    val timeFeatureStatus = characteristic.value[0]
+                    val switchOnHour = characteristic.value[1]
+                    val switchOnMinute = characteristic.value[2]
+                    val switchOffHour = characteristic.value[3]
+                    val switchOffMinute = characteristic.value[4]
+
+                    val currentTimeDTO = FeatureTimerDTO(
+                        ESwitch.fromInt(timeFeatureStatus.toInt()),
+                        switchOnHour.toInt(),
+                        switchOnMinute.toInt(),
+                        switchOffHour.toInt(),
+                        switchOffMinute.toInt()
+                    )
+
+                    localScopeStatus.launch {
+                        _featureTime.emit(currentTimeDTO)
+                    }
+                }
+            }
         }
 
         @SuppressLint("MissingPermission")
@@ -306,10 +474,33 @@ class CradleLedBleClient(private val context: Context) {
     }
     //endregion
 
+    //region Data Classes
+    data class CurrentTimeDTO(
+        val currentHour: Int,
+        val currentMinute: Int,
+        val currentSecond: Int,
+        val currentDay: Int,
+        val currentMonth: Int,
+        val currentYear: Int,
+    )
+
+    data class FeatureTimerDTO(
+        val timeFeatureStatus: ESwitch,
+        val switchOnHour: Int,
+        val switchOnMinute: Int,
+        val switchOffHour: Int,
+        val switchOffMinute: Int,
+    )
+    //endregion
+
     //region Enums
-    enum class ESwitch(val value: Short) {
+    enum class ESwitch(val value: Int) {
         OFF(0x0),
-        ON(0x1)
+        ON(0x1);
+
+        companion object {
+            fun fromInt(value: Int) = values().first { it.value == value }
+        }
     }
     //endregion
 
