@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
                                     onDisconnect = {
                                         bleClient.disconnect()
                                     },
-                                    status = bleClient.bleDeviceStatus.value,
+                                    status = bleClient.bleDeviceStatus.collectAsState().value,
                                     viewModel = bleClient
                                 )
                             }
