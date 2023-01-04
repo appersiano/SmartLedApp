@@ -307,9 +307,8 @@ fun SetLEDBrightness(viewModel: CradleClientViewModel) {
         value = sliderBrightness.value,
         onValueChange = {
             sliderBrightness.value = it
-            viewModel.setLEDBrightness(sliderBrightness.value.toLong())
         },
-        valueRange = 0f..100f,
+        valueRange = 0f..255f,
         colors = SliderDefaults.colors(
             thumbColor = MaterialTheme.colors.primary,
             activeTrackColor = MaterialTheme.colors.primary

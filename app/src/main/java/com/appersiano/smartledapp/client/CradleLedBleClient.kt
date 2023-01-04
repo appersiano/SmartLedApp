@@ -144,7 +144,7 @@ class CradleLedBleClient(private val context: Context) {
      *
      * @param brightness range 0-100
      */
-    fun setLEDBrightness(@IntRange(from = 0L, to = 100L) brightness: Long): Boolean? {
+    fun setLEDBrightness(@IntRange(from = 0L, to = 255L) brightness: Long): Boolean? {
         val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
         val characteristic =
             service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.LEDBrightness.uuid)
@@ -176,7 +176,8 @@ class CradleLedBleClient(private val context: Context) {
         val characteristic =
             service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.CurrentTime.uuid)
 
-        val payload = byteArrayOf(hour.toByte(), minute.toByte(), second.toByte())
+        val payload = byteArrayOf(hour.toByte(), minute.toByte(), second.toByte(),
+            day.toByte(), month.toByte(), year.toByte())
         return sendCommand(characteristic, payload)
     }
 
@@ -365,7 +366,7 @@ class CradleLedBleClient(private val context: Context) {
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
-            Log.d(TAG, "📖 onCharacteristicRead: ${characteristic?.uuid}")
+            Log.d(TAG, "📖 onCharacteristicRead: ${characteristic?.uuid}, Data: ${characteristic?.value.contentToString()}")
             when (characteristic?.uuid) {
                 SmartLedUUID.CradleSmartLightService.LEDStatus.uuid -> {
                     val ledStatus = characteristic.value[0]
