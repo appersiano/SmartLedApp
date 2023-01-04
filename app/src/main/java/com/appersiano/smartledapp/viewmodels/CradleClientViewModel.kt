@@ -13,6 +13,8 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
 
     //region MutableStateFlow
     val bleDeviceStatus = bleClient.deviceConnectionStatus
+    val ledStatus = bleClient.ledStatus
+    val pirStatus = bleClient.pirStatus
     //endregion
 
     fun connect(macAddress: String) {
@@ -57,6 +59,30 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         } else {
             bleClient.setTimerFeature(CradleLedBleClient.ESwitch.OFF, hourON, minuteON, hourOFF, minuteOFF)
         }
+    }
+
+    fun readLedStatus() {
+        bleClient.readLEDStatus()
+    }
+
+    fun readPIRStatus() {
+        bleClient.readPIRStatus()
+    }
+
+    fun readLEDColor() {
+        bleClient.readLEDColor()
+    }
+
+    fun readLEDBrightness() {
+        bleClient.readLEDBrightness()
+    }
+
+    fun readCurrentTime() {
+        bleClient.readCurrentTime()
+    }
+
+    fun readTimerFeature(){
+        bleClient.readTimerFeature()
     }
 
     override fun onCleared() {

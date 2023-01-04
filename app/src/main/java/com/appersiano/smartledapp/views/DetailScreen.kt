@@ -1,9 +1,6 @@
 package com.appersiano.smartledapp.views
 
-import android.app.Application
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -82,12 +79,22 @@ fun DetailScreen(
                     .width(1.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
+            Button(onClick = { viewModel.readLedStatus() }) {
+                Text(text = "R")
+            }
+        }
+        Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
+        Row(Modifier.height(IntrinsicSize.Min)) {
             SetPIRStatus(viewModel)
             Divider(
                 modifier = Modifier
                     .fillMaxHeight()  //fill the max height
                     .width(1.dp)
             )
+            Spacer(modifier = Modifier.width(10.dp))
+            Button(onClick = { viewModel.readPIRStatus() }) {
+                Text(text = "R")
+            }
         }
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
         SetLEDColor(viewModel)
@@ -101,209 +108,54 @@ fun DetailScreen(
 }
 
 @Composable
-fun SetTimerFeature(viewModel: CradleClientViewModel) {
-    val switchValue = remember { mutableStateOf(false) }
-
-    val hourONValue = remember { mutableStateOf(0) }
-    val hourOFFValue = remember { mutableStateOf(0) }
-    val minuteONValue = remember { mutableStateOf(0) }
-    val minuteOFFValue = remember { mutableStateOf(0) }
-
-    Row {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_baseline_timer_24),
-            contentDescription = "Time Feature"
-        )
-        Spacer(modifier = Modifier.size(5.dp))
-        Text(text = "Timer Feature")
-    }
-    Spacer(modifier = Modifier.height(5.dp))
+private fun SetLEDStatus(viewModel: CradleClientViewModel) {
+    val checkedLed = remember { mutableStateOf(false) }
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Text(
             modifier = Modifier
                 .fillMaxHeight()
                 .wrapContentHeight(),
             textAlign = TextAlign.Center,
-            text = "Switch ON/OFF"
+            text = "LED Status"
         )
         Switch(
             modifier = Modifier.padding(start = 16.dp),
-            checked = switchValue.value,
+            checked = checkedLed.value,
             onCheckedChange = {
-                switchValue.value = it
+                if (it) {
+                    viewModel.setLEDStatus(true)
+                    checkedLed.value = true
+                } else {
+                    viewModel.setLEDStatus(false)
+                    checkedLed.value = false
+                }
             })
     }
-    Spacer(modifier = Modifier.height(5.dp))
-    Row {
-        Text("ON", modifier = Modifier.width(30.dp))
-        Spacer(modifier = Modifier.width(10.dp))
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = hourONValue.value.toString(),
-            label = { Text("Hour") },
-            onValueChange = { hourONValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-        Spacer(modifier = Modifier.width(5.dp))
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = minuteONValue.value.toString(),
-            label = { Text("Minute") },
-            onValueChange = { minuteONValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-    }
-    Row {
-        Text("OFF", modifier = Modifier.width(30.dp))
-        Spacer(modifier = Modifier.width(10.dp))
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = hourOFFValue.value.toString(),
-            label = { Text("Hour") },
-            onValueChange = { hourOFFValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-        Spacer(modifier = Modifier.width(5.dp))
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = minuteOFFValue.value.toString(),
-            label = { Text("Minute") },
-            onValueChange = { minuteOFFValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-    }
-    Button(onClick = {
-        viewModel.setTimerFeature(
-            switchValue.value,
-            hourONValue.value,
-            minuteONValue.value,
-            hourOFFValue.value,
-            minuteOFFValue.value
-        )
-    }, modifier = Modifier.fillMaxWidth()) {
-        Text(text = "Set Timer Feature")
-    }
 }
 
 @Composable
-fun SetCurrentTime(viewModel: CradleClientViewModel) {
-    val hourValue = remember { mutableStateOf(0) }
-    val minuteValue = remember { mutableStateOf(0) }
-    val secondValue = remember { mutableStateOf(0) }
-    val dayValue = remember { mutableStateOf(0) }
-    val monthValue = remember { mutableStateOf(0) }
-    val yearValue = remember { mutableStateOf(0) }
-
-    Row {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_baseline_access_time_24),
-            contentDescription = "Current Time"
+private fun SetPIRStatus(viewModel: CradleClientViewModel) {
+    val checkedLed = remember { mutableStateOf(false) }
+    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+        Text(
+            modifier = Modifier
+                .fillMaxHeight()
+                .wrapContentHeight(),
+            textAlign = TextAlign.Center,
+            text = "PIR Status"
         )
-        Spacer(modifier = Modifier.size(5.dp))
-        Text(text = "Current Time")
-    }
-    Spacer(modifier = Modifier.height(5.dp))
-    Row {
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = hourValue.value.toString(),
-            label = { Text("Hour") },
-            onValueChange = { hourValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-        Spacer(modifier = Modifier.width(5.dp))
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = minuteValue.value.toString(),
-            label = { Text("Minute") },
-            onValueChange = { minuteValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-        Spacer(modifier = Modifier.width(5.dp))
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = secondValue.value.toString(),
-            label = { Text("Second") },
-            onValueChange = { secondValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-    }
-    Row {
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = dayValue.value.toString(),
-            label = { Text("Day") },
-            onValueChange = { dayValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-        Spacer(modifier = Modifier.width(5.dp))
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = monthValue.value.toString(),
-            label = { Text("Month") },
-            onValueChange = { monthValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-        Spacer(modifier = Modifier.width(5.dp))
-        TextField(
-            modifier = Modifier.width(100.dp),
-            value = yearValue.value.toString(),
-            label = { Text("year") },
-            onValueChange = { yearValue.value = it.toInt() },
-            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
-        )
-    }
-    Button(
-        onClick = {
-            viewModel.setCurrentTime(
-                hourValue.value,
-                minuteValue.value,
-                secondValue.value,
-                dayValue.value,
-                monthValue.value,
-                yearValue.value
-            )
-        },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(text = "Set Current Timer")
-    }
-}
-
-@Composable
-fun SetLEDBrightness(viewModel: CradleClientViewModel) {
-    val sliderBrightness = remember { mutableStateOf(0f) }
-    Row {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_baseline_settings_brightness_24),
-            contentDescription = "Brightness"
-        )
-        Spacer(modifier = Modifier.size(5.dp))
-        Text(text = "Brightness")
-        Spacer(modifier = Modifier.size(5.dp))
-        Text(text = sliderBrightness.value.toInt().toString())
-    }
-    Slider(
-        value = sliderBrightness.value,
-        onValueChange = {
-            sliderBrightness.value = it
-            viewModel.setLEDBrightness(sliderBrightness.value.toLong())
-        },
-        valueRange = 0f..100f,
-        colors = SliderDefaults.colors(
-            thumbColor = MaterialTheme.colors.primary,
-            activeTrackColor = MaterialTheme.colors.primary
-        )
-    )
-    Button(
-        onClick = {
-            viewModel.setLEDBrightness(
-                sliderBrightness.value.toLong()
-            )
-        },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(text = "Set LED Brightness")
+        Switch(
+            modifier = Modifier.padding(start = 16.dp),
+            checked = checkedLed.value,
+            onCheckedChange = {
+                if (it) {
+                    viewModel.setPIRStatus(true)
+                    checkedLed.value = true
+                } else {
+                    viewModel.setPIRStatus(false)
+                    checkedLed.value = false
+                }
+            })
     }
 }
 
@@ -322,28 +174,29 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
     val sliderPositionBlue = remember { mutableStateOf(0) }
 
     Column {
-        Row(
-            modifier = Modifier
-                .height(IntrinsicSize.Min)
-                .fillMaxWidth()
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_baseline_color_lens_24),
-                contentDescription = "Brightness"
-            )
-            Text(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .wrapContentHeight(),
-                textAlign = TextAlign.Center,
-                text = "LED RGB Color"
-            )
-            Box(
-                modifier = Modifier
-                    .padding(start = 20.dp, end = 20.dp)
-                    .background(mRGBColor.value, shape = CircleShape)
-                    .requiredSize(25.dp)
-            )
+        Box(modifier = Modifier.fillMaxWidth()) {
+            Row(modifier = Modifier.align(Alignment.CenterStart)) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_baseline_color_lens_24),
+                    contentDescription = "Brightness"
+                )
+                Text(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .wrapContentHeight(),
+                    textAlign = TextAlign.Center,
+                    text = "LED RGB Color"
+                )
+                Box(
+                    modifier = Modifier
+                        .padding(start = 20.dp, end = 20.dp)
+                        .background(mRGBColor.value, shape = CircleShape)
+                        .requiredSize(25.dp)
+                )
+            }
+            Button( modifier = Modifier.align(Alignment.TopEnd), onClick = { viewModel.readLEDColor() }) {
+                Text(text = "R")
+            }
         }
 
         Row {
@@ -431,61 +284,234 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
     }
 }
 
+@Composable
+fun SetLEDBrightness(viewModel: CradleClientViewModel) {
+    val sliderBrightness = remember { mutableStateOf(0f) }
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.align(Alignment.CenterStart)) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_baseline_settings_brightness_24),
+                contentDescription = "Brightness"
+            )
+            Spacer(modifier = Modifier.size(5.dp))
+            Text(text = "Brightness")
+            Spacer(modifier = Modifier.size(5.dp))
+            Text(text = sliderBrightness.value.toInt().toString())
+
+        }
+        Button( modifier = Modifier.align(Alignment.TopEnd), onClick = { viewModel.readLEDBrightness() }) {
+            Text(text = "R")
+        }
+    }
+    Slider(
+        value = sliderBrightness.value,
+        onValueChange = {
+            sliderBrightness.value = it
+            viewModel.setLEDBrightness(sliderBrightness.value.toLong())
+        },
+        valueRange = 0f..100f,
+        colors = SliderDefaults.colors(
+            thumbColor = MaterialTheme.colors.primary,
+            activeTrackColor = MaterialTheme.colors.primary
+        )
+    )
+    Button(
+        onClick = {
+            viewModel.setLEDBrightness(
+                sliderBrightness.value.toLong()
+            )
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text = "Set LED Brightness")
+    }
+}
+
+@Composable
+fun SetCurrentTime(viewModel: CradleClientViewModel) {
+    val hourValue = remember { mutableStateOf(0) }
+    val minuteValue = remember { mutableStateOf(0) }
+    val secondValue = remember { mutableStateOf(0) }
+    val dayValue = remember { mutableStateOf(0) }
+    val monthValue = remember { mutableStateOf(0) }
+    val yearValue = remember { mutableStateOf(0) }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.align(Alignment.CenterStart)) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_baseline_access_time_24),
+                contentDescription = "Current Time"
+            )
+            Spacer(modifier = Modifier.size(5.dp))
+            Text(text = "Current Time")
+
+        }
+        Button( modifier = Modifier.align(Alignment.TopEnd), onClick = { viewModel.readCurrentTime() }) {
+            Text(text = "R")
+        }
+    }
+    Spacer(modifier = Modifier.height(5.dp))
+    Row {
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = hourValue.value.toString(),
+            label = { Text("Hour") },
+            onValueChange = { hourValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = minuteValue.value.toString(),
+            label = { Text("Minute") },
+            onValueChange = { minuteValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = secondValue.value.toString(),
+            label = { Text("Second") },
+            onValueChange = { secondValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+    }
+    Row {
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = dayValue.value.toString(),
+            label = { Text("Day") },
+            onValueChange = { dayValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = monthValue.value.toString(),
+            label = { Text("Month") },
+            onValueChange = { monthValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = yearValue.value.toString(),
+            label = { Text("year") },
+            onValueChange = { yearValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+    }
+    Button(
+        onClick = {
+            viewModel.setCurrentTime(
+                hourValue.value,
+                minuteValue.value,
+                secondValue.value,
+                dayValue.value,
+                monthValue.value,
+                yearValue.value
+            )
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text = "Set Current Timer")
+    }
+}
+
+@Composable
+fun SetTimerFeature(viewModel: CradleClientViewModel) {
+    val switchValue = remember { mutableStateOf(false) }
+
+    val hourONValue = remember { mutableStateOf(0) }
+    val hourOFFValue = remember { mutableStateOf(0) }
+    val minuteONValue = remember { mutableStateOf(0) }
+    val minuteOFFValue = remember { mutableStateOf(0) }
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.align(Alignment.CenterStart)) {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_baseline_timer_24),
+                contentDescription = "Time Feature"
+            )
+            Spacer(modifier = Modifier.size(5.dp))
+            Text(text = "Timer Feature")
+
+        }
+        Button( modifier = Modifier.align(Alignment.TopEnd), onClick = { viewModel.readTimerFeature() }) {
+            Text(text = "R")
+        }
+    }
+    Spacer(modifier = Modifier.height(5.dp))
+    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
+        Text(
+            modifier = Modifier
+                .fillMaxHeight()
+                .wrapContentHeight(),
+            textAlign = TextAlign.Center,
+            text = "Switch ON/OFF"
+        )
+        Switch(
+            modifier = Modifier.padding(start = 16.dp),
+            checked = switchValue.value,
+            onCheckedChange = {
+                switchValue.value = it
+            })
+    }
+    Spacer(modifier = Modifier.height(5.dp))
+    Row {
+        Text("ON", modifier = Modifier.width(30.dp))
+        Spacer(modifier = Modifier.width(10.dp))
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = hourONValue.value.toString(),
+            label = { Text("Hour") },
+            onValueChange = { hourONValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = minuteONValue.value.toString(),
+            label = { Text("Minute") },
+            onValueChange = { minuteONValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+    }
+    Row {
+        Text("OFF", modifier = Modifier.width(30.dp))
+        Spacer(modifier = Modifier.width(10.dp))
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = hourOFFValue.value.toString(),
+            label = { Text("Hour") },
+            onValueChange = { hourOFFValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+        TextField(
+            modifier = Modifier.width(100.dp),
+            value = minuteOFFValue.value.toString(),
+            label = { Text("Minute") },
+            onValueChange = { minuteOFFValue.value = it.toInt() },
+            keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+        )
+    }
+    Button(onClick = {
+        viewModel.setTimerFeature(
+            switchValue.value,
+            hourONValue.value,
+            minuteONValue.value,
+            hourOFFValue.value,
+            minuteOFFValue.value
+        )
+    }, modifier = Modifier.fillMaxWidth()) {
+        Text(text = "Set Timer Feature")
+    }
+}
+
 fun updateCircleRGBColor(RGBColor: MutableState<Color>, red: Int, green: Int, blue: Int) {
     val color = android.graphics.Color.rgb(red, green, blue)
     RGBColor.value = Color(color)
-}
-
-@Composable
-private fun SetLEDStatus(viewModel: CradleClientViewModel) {
-    val checkedLed = remember { mutableStateOf(false) }
-    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-        Text(
-            modifier = Modifier
-                .fillMaxHeight()
-                .wrapContentHeight(),
-            textAlign = TextAlign.Center,
-            text = "LED Status"
-        )
-        Switch(
-            modifier = Modifier.padding(start = 16.dp),
-            checked = checkedLed.value,
-            onCheckedChange = {
-                if (it) {
-                    viewModel.setLEDStatus(true)
-                    checkedLed.value = true
-                } else {
-                    viewModel.setLEDStatus(false)
-                    checkedLed.value = false
-                }
-            })
-    }
-}
-
-@Composable
-private fun SetPIRStatus(viewModel: CradleClientViewModel) {
-    val checkedLed = remember { mutableStateOf(false) }
-    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-        Text(
-            modifier = Modifier
-                .fillMaxHeight()
-                .wrapContentHeight(),
-            textAlign = TextAlign.Center,
-            text = "PIR Status"
-        )
-        Switch(
-            modifier = Modifier.padding(start = 16.dp),
-            checked = checkedLed.value,
-            onCheckedChange = {
-                if (it) {
-                    viewModel.setPIRStatus(true)
-                    checkedLed.value = true
-                } else {
-                    viewModel.setPIRStatus(false)
-                    checkedLed.value = false
-                }
-            })
-    }
 }
 
 fun getStatusColor(status: CradleLedBleClient.SDeviceStatus): Color {
