@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.appersiano.smartledapp.R
 import com.appersiano.smartledapp.client.CradleLedBleClient
 import com.appersiano.smartledapp.viewmodels.CradleClientViewModel
+import java.util.*
 
 @Composable
 fun DetailScreen(
@@ -194,7 +195,9 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
                         .requiredSize(25.dp)
                 )
             }
-            Button( modifier = Modifier.align(Alignment.TopEnd), onClick = { viewModel.readLEDColor() }) {
+            Button(
+                modifier = Modifier.align(Alignment.TopEnd),
+                onClick = { viewModel.readLEDColor() }) {
                 Text(text = "R")
             }
         }
@@ -299,7 +302,9 @@ fun SetLEDBrightness(viewModel: CradleClientViewModel) {
             Text(text = sliderBrightness.value.toInt().toString())
 
         }
-        Button( modifier = Modifier.align(Alignment.TopEnd), onClick = { viewModel.readLEDBrightness() }) {
+        Button(
+            modifier = Modifier.align(Alignment.TopEnd),
+            onClick = { viewModel.readLEDBrightness() }) {
             Text(text = "R")
         }
     }
@@ -328,12 +333,14 @@ fun SetLEDBrightness(viewModel: CradleClientViewModel) {
 
 @Composable
 fun SetCurrentTime(viewModel: CradleClientViewModel) {
-    val hourValue = remember { mutableStateOf(0) }
-    val minuteValue = remember { mutableStateOf(0) }
-    val secondValue = remember { mutableStateOf(0) }
-    val dayValue = remember { mutableStateOf(0) }
-    val monthValue = remember { mutableStateOf(0) }
-    val yearValue = remember { mutableStateOf(0) }
+    val currentDateTime = Calendar.getInstance()
+
+    val hourValue = remember { mutableStateOf(currentDateTime.get(Calendar.HOUR_OF_DAY)) }
+    val minuteValue = remember { mutableStateOf(currentDateTime.get(Calendar.MINUTE)) }
+    val secondValue = remember { mutableStateOf(currentDateTime.get(Calendar.SECOND)) }
+    val dayValue = remember { mutableStateOf(currentDateTime.get(Calendar.DAY_OF_MONTH)) }
+    val monthValue = remember { mutableStateOf(currentDateTime.get(Calendar.MONTH) + 1) }
+    val yearValue = remember { mutableStateOf(currentDateTime.get(Calendar.YEAR) - 2000) }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.align(Alignment.CenterStart)) {
@@ -345,7 +352,9 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             Text(text = "Current Time")
 
         }
-        Button( modifier = Modifier.align(Alignment.TopEnd), onClick = { viewModel.readCurrentTime() }) {
+        Button(
+            modifier = Modifier.align(Alignment.TopEnd),
+            onClick = { viewModel.readCurrentTime() }) {
             Text(text = "R")
         }
     }
@@ -355,7 +364,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = hourValue.value.toString(),
             label = { Text("Hour") },
-            onValueChange = { hourValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    hourValue.value = it.toInt()
+                } catch (e: java.lang.Exception) {
+                    hourValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.width(5.dp))
@@ -363,7 +378,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = minuteValue.value.toString(),
             label = { Text("Minute") },
-            onValueChange = { minuteValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    minuteValue.value = it.toInt()
+                } catch (e: java.lang.Exception) {
+                    minuteValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.width(5.dp))
@@ -371,7 +392,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = secondValue.value.toString(),
             label = { Text("Second") },
-            onValueChange = { secondValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    secondValue.value = it.toInt()
+                } catch (e: java.lang.Exception) {
+                    secondValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
     }
@@ -380,7 +407,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = dayValue.value.toString(),
             label = { Text("Day") },
-            onValueChange = { dayValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    dayValue.value = it.toInt()
+                } catch (e: java.lang.Exception) {
+                    dayValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.width(5.dp))
@@ -388,7 +421,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = monthValue.value.toString(),
             label = { Text("Month") },
-            onValueChange = { monthValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    monthValue.value = it.toInt()
+                } catch (e: java.lang.Exception) {
+                    monthValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.width(5.dp))
@@ -396,7 +435,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = yearValue.value.toString(),
             label = { Text("year") },
-            onValueChange = { yearValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    yearValue.value = it.toInt()
+                } catch (e: java.lang.Exception) {
+                    yearValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
     }
@@ -436,7 +481,9 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
             Text(text = "Timer Feature")
 
         }
-        Button( modifier = Modifier.align(Alignment.TopEnd), onClick = { viewModel.readTimerFeature() }) {
+        Button(
+            modifier = Modifier.align(Alignment.TopEnd),
+            onClick = { viewModel.readTimerFeature() }) {
             Text(text = "R")
         }
     }
