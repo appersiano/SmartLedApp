@@ -7,10 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -109,7 +106,10 @@ fun DetailScreen(
 
 @Composable
 private fun SetLEDStatus(viewModel: CradleClientViewModel) {
-    val checkedLed = remember { mutableStateOf(false) }
+    val checkedLed = viewModel.ledStatusBoolean.collectAsState(initial = false)
+    val checkedLedLocal = remember { mutableStateOf(false) }
+    checkedLedLocal.value = checkedLed.value
+
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Text(
             modifier = Modifier
@@ -120,14 +120,14 @@ private fun SetLEDStatus(viewModel: CradleClientViewModel) {
         )
         Switch(
             modifier = Modifier.padding(start = 16.dp),
-            checked = checkedLed.value,
+            checked = checkedLedLocal.value,
             onCheckedChange = {
                 if (it) {
                     viewModel.setLEDStatus(true)
-                    checkedLed.value = true
+                    checkedLedLocal.value = true
                 } else {
                     viewModel.setLEDStatus(false)
-                    checkedLed.value = false
+                    checkedLedLocal.value = false
                 }
             })
     }

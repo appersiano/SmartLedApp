@@ -4,6 +4,7 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import com.appersiano.smartledapp.client.CradleLedBleClient
+import kotlinx.coroutines.flow.map
 
 private const val TAG = "CradleClientViewModel"
 
@@ -13,7 +14,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
 
     //region MutableStateFlow
     val bleDeviceStatus = bleClient.deviceConnectionStatus
-    val ledStatus = bleClient.ledStatus
+    val ledStatusBoolean = bleClient.ledStatus.map { it.toBool() }
     val pirStatus = bleClient.pirStatus
     //endregion
 

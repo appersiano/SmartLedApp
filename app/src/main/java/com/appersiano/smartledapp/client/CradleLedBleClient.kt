@@ -499,6 +499,8 @@ class CradleLedBleClient(private val context: Context) {
         OFF(0x0),
         ON(0x1);
 
+        fun toBool() = value == ESwitch.ON.value
+
         companion object {
             fun fromInt(value: Int) = values().first { it.value == value }
         }
