@@ -140,8 +140,8 @@ private fun SetLEDStatus(viewModel: CradleClientViewModel) {
             onClick = {
                 viewModel.setLEDStatus(true)
             }
-        ){
-            Text( text = "ON")
+        ) {
+            Text(text = "ON")
         }
 
         Spacer(
@@ -152,8 +152,8 @@ private fun SetLEDStatus(viewModel: CradleClientViewModel) {
             onClick = {
                 viewModel.setLEDStatus(false)
             }
-        ){
-            Text( text = "OFF")
+        ) {
+            Text(text = "OFF")
         }
 
         Spacer(
@@ -181,8 +181,8 @@ private fun SetPIRStatus(viewModel: CradleClientViewModel) {
             onClick = {
                 viewModel.setPIRStatus(true)
             }
-        ){
-            Text( text = "ON")
+        ) {
+            Text(text = "ON")
         }
 
         Spacer(
@@ -193,8 +193,8 @@ private fun SetPIRStatus(viewModel: CradleClientViewModel) {
             onClick = {
                 viewModel.setPIRStatus(false)
             }
-        ){
-            Text( text = "OFF")
+        ) {
+            Text(text = "OFF")
         }
 
         Spacer(
@@ -409,7 +409,7 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             label = { Text("Hour") },
             onValueChange = {
                 try {
-                    hourValue.value = it.toInt()
+                    hourValue.value = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
                     hourValue.value = 0
                 }
@@ -423,7 +423,7 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             label = { Text("Minute") },
             onValueChange = {
                 try {
-                    minuteValue.value = it.toInt()
+                    minuteValue.value = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
                     minuteValue.value = 0
                 }
@@ -437,7 +437,7 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             label = { Text("Second") },
             onValueChange = {
                 try {
-                    secondValue.value = it.toInt()
+                    secondValue.value = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
                     secondValue.value = 0
                 }
@@ -452,7 +452,7 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             label = { Text("Day") },
             onValueChange = {
                 try {
-                    dayValue.value = it.toInt()
+                    dayValue.value = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
                     dayValue.value = 0
                 }
@@ -466,7 +466,7 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             label = { Text("Month") },
             onValueChange = {
                 try {
-                    monthValue.value = it.toInt()
+                    monthValue.value = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
                     monthValue.value = 0
                 }
@@ -480,7 +480,7 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
             label = { Text("year") },
             onValueChange = {
                 try {
-                    yearValue.value = it.toInt()
+                    yearValue.value = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
                     yearValue.value = 0
                 }
@@ -554,7 +554,13 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = hourONValue.value.toString(),
             label = { Text("Hour") },
-            onValueChange = { hourONValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    hourONValue.value = it.trim().toInt()
+                } catch (e: java.lang.Exception) {
+                    hourONValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.width(5.dp))
@@ -562,7 +568,13 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = minuteONValue.value.toString(),
             label = { Text("Minute") },
-            onValueChange = { minuteONValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    minuteONValue.value = it.trim().toInt()
+                } catch (e: java.lang.Exception) {
+                    minuteONValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
     }
@@ -573,7 +585,13 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = hourOFFValue.value.toString(),
             label = { Text("Hour") },
-            onValueChange = { hourOFFValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    hourOFFValue.value = it.trim().toInt()
+                } catch (e: java.lang.Exception) {
+                    hourOFFValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
         Spacer(modifier = Modifier.width(5.dp))
@@ -581,7 +599,13 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
             modifier = Modifier.width(100.dp),
             value = minuteOFFValue.value.toString(),
             label = { Text("Minute") },
-            onValueChange = { minuteOFFValue.value = it.toInt() },
+            onValueChange = {
+                try {
+                    minuteOFFValue.value = it.trim().toInt()
+                } catch (e: java.lang.Exception) {
+                    minuteOFFValue.value = 0
+                }
+            },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
         )
     }
