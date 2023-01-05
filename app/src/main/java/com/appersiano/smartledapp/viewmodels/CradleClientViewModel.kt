@@ -15,7 +15,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     //region MutableStateFlow
     val bleDeviceStatus = bleClient.deviceConnectionStatus
     val ledStatusBoolean = bleClient.ledStatus.map { it.toBool() }
-    val pirStatus = bleClient.pirStatus
+    val pirStatusBoolean = bleClient.pirStatus.map { it.toBool() }
     //endregion
 
     fun connect(macAddress: String) {

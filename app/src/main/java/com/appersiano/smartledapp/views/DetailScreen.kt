@@ -70,29 +70,45 @@ fun DetailScreen(
         }
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
         Row(Modifier.height(IntrinsicSize.Min)) {
+            val checkedLed = viewModel.ledStatusBoolean.collectAsState(initial = false)
             SetLEDStatus(viewModel)
             Divider(
                 modifier = Modifier
                     .fillMaxHeight()  //fill the max height
                     .width(1.dp)
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(5.dp))
             Button(onClick = { viewModel.readLedStatus() }) {
                 Text(text = "R")
             }
+            Spacer(modifier = Modifier.width(5.dp))
+            Box(
+                modifier = Modifier
+                    .padding(start = 20.dp, end = 20.dp)
+                    .background(getOnOffColor(checkedLed.value), shape = CircleShape)
+                    .requiredSize(15.dp)
+            )
         }
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
         Row(Modifier.height(IntrinsicSize.Min)) {
+            val checkedPir = viewModel.pirStatusBoolean.collectAsState(initial = false)
             SetPIRStatus(viewModel)
             Divider(
                 modifier = Modifier
                     .fillMaxHeight()  //fill the max height
                     .width(1.dp)
             )
-            Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(5.dp))
             Button(onClick = { viewModel.readPIRStatus() }) {
                 Text(text = "R")
             }
+            Spacer(modifier = Modifier.width(5.dp))
+            Box(
+                modifier = Modifier
+                    .padding(start = 20.dp, end = 20.dp)
+                    .background(getOnOffColor(checkedPir.value), shape = CircleShape)
+                    .requiredSize(15.dp)
+            )
         }
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
         SetLEDColor(viewModel)
@@ -107,10 +123,6 @@ fun DetailScreen(
 
 @Composable
 private fun SetLEDStatus(viewModel: CradleClientViewModel) {
-    val checkedLed = viewModel.ledStatusBoolean.collectAsState(initial = false)
-    val checkedLedLocal = remember { mutableStateOf(false) }
-    checkedLedLocal.value = checkedLed.value
-
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Text(
             modifier = Modifier
@@ -119,24 +131,39 @@ private fun SetLEDStatus(viewModel: CradleClientViewModel) {
             textAlign = TextAlign.Center,
             text = "LED Status"
         )
-        Switch(
-            modifier = Modifier.padding(start = 16.dp),
-            checked = checkedLedLocal.value,
-            onCheckedChange = {
-                if (it) {
-                    viewModel.setLEDStatus(true)
-                    checkedLedLocal.value = true
-                } else {
-                    viewModel.setLEDStatus(false)
-                    checkedLedLocal.value = false
-                }
-            })
+
+        Spacer(
+            modifier = Modifier.width(5.dp)
+        )
+
+        Button(
+            onClick = {
+                viewModel.setLEDStatus(true)
+            }
+        ){
+            Text( text = "ON")
+        }
+
+        Spacer(
+            modifier = Modifier.width(5.dp)
+        )
+
+        Button(
+            onClick = {
+                viewModel.setLEDStatus(false)
+            }
+        ){
+            Text( text = "OFF")
+        }
+
+        Spacer(
+            modifier = Modifier.width(5.dp)
+        )
     }
 }
 
 @Composable
 private fun SetPIRStatus(viewModel: CradleClientViewModel) {
-    val checkedLed = remember { mutableStateOf(false) }
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Text(
             modifier = Modifier
@@ -145,18 +172,34 @@ private fun SetPIRStatus(viewModel: CradleClientViewModel) {
             textAlign = TextAlign.Center,
             text = "PIR Status"
         )
-        Switch(
-            modifier = Modifier.padding(start = 16.dp),
-            checked = checkedLed.value,
-            onCheckedChange = {
-                if (it) {
-                    viewModel.setPIRStatus(true)
-                    checkedLed.value = true
-                } else {
-                    viewModel.setPIRStatus(false)
-                    checkedLed.value = false
-                }
-            })
+
+        Spacer(
+            modifier = Modifier.width(5.dp)
+        )
+
+        Button(
+            onClick = {
+                viewModel.setPIRStatus(true)
+            }
+        ){
+            Text( text = "ON")
+        }
+
+        Spacer(
+            modifier = Modifier.width(5.dp)
+        )
+
+        Button(
+            onClick = {
+                viewModel.setPIRStatus(false)
+            }
+        ){
+            Text( text = "OFF")
+        }
+
+        Spacer(
+            modifier = Modifier.width(5.dp)
+        )
     }
 }
 
@@ -566,6 +609,13 @@ fun getStatusColor(status: CradleLedBleClient.SDeviceStatus): Color {
         CradleLedBleClient.SDeviceStatus.READY -> Color.Green
         CradleLedBleClient.SDeviceStatus.UNKNOWN -> Color.Gray
         is CradleLedBleClient.SDeviceStatus.DISCONNECTED -> Color.Red
+    }
+}
+
+fun getOnOffColor(status: Boolean): Color {
+    return when (status) {
+        true -> Color.Green
+        false -> Color.Red
     }
 }
 
