@@ -69,47 +69,9 @@ fun DetailScreen(
             }
         }
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
-        Row(Modifier.height(IntrinsicSize.Min)) {
-            val checkedLed = viewModel.ledStatusBoolean.collectAsState(initial = false)
-            SetLEDStatus(viewModel)
-            Divider(
-                modifier = Modifier
-                    .fillMaxHeight()  //fill the max height
-                    .width(1.dp)
-            )
-            Spacer(modifier = Modifier.width(5.dp))
-            Button(onClick = { viewModel.readLedStatus() }) {
-                Text(text = "R")
-            }
-            Spacer(modifier = Modifier.width(5.dp))
-            Box(
-                modifier = Modifier
-                    .padding(start = 20.dp, end = 20.dp)
-                    .background(getOnOffColor(checkedLed.value), shape = CircleShape)
-                    .requiredSize(15.dp)
-            )
-        }
+        SetLEDStatusRow(viewModel)
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
-        Row(Modifier.height(IntrinsicSize.Min)) {
-            val checkedPir = viewModel.pirStatusBoolean.collectAsState(initial = false)
-            SetPIRStatus(viewModel)
-            Divider(
-                modifier = Modifier
-                    .fillMaxHeight()  //fill the max height
-                    .width(1.dp)
-            )
-            Spacer(modifier = Modifier.width(5.dp))
-            Button(onClick = { viewModel.readPIRStatus() }) {
-                Text(text = "R")
-            }
-            Spacer(modifier = Modifier.width(5.dp))
-            Box(
-                modifier = Modifier
-                    .padding(start = 20.dp, end = 20.dp)
-                    .background(getOnOffColor(checkedPir.value), shape = CircleShape)
-                    .requiredSize(15.dp)
-            )
-        }
+        SetPiRStatusRow(viewModel)
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
         SetLEDColor(viewModel)
         Divider(Modifier.padding(top = 10.dp, bottom = 10.dp), thickness = 1.dp)
@@ -122,7 +84,55 @@ fun DetailScreen(
 }
 
 @Composable
-private fun SetLEDStatus(viewModel: CradleClientViewModel) {
+private fun SetPiRStatusRow(viewModel: CradleClientViewModel) {
+    Row(Modifier.height(IntrinsicSize.Min)) {
+        val checkedPir = viewModel.pirStatusBoolean.collectAsState(initial = false)
+        SetPIRStatusCommands(viewModel)
+        Divider(
+            modifier = Modifier
+                .fillMaxHeight()  //fill the max height
+                .width(1.dp)
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+        Button(onClick = { viewModel.readPIRStatus() }) {
+            Text(text = "R")
+        }
+        Spacer(modifier = Modifier.width(5.dp))
+        Box(
+            modifier = Modifier
+                .padding(start = 20.dp, end = 20.dp)
+                .background(getOnOffColor(checkedPir.value), shape = CircleShape)
+                .requiredSize(15.dp)
+        )
+    }
+}
+
+@Composable
+private fun SetLEDStatusRow(viewModel: CradleClientViewModel) {
+    Row(Modifier.height(IntrinsicSize.Min)) {
+        val checkedLed = viewModel.ledStatusBoolean.collectAsState(initial = false)
+        SetLEDStatusCommands(viewModel)
+        Divider(
+            modifier = Modifier
+                .fillMaxHeight()  //fill the max height
+                .width(1.dp)
+        )
+        Spacer(modifier = Modifier.width(5.dp))
+        Button(onClick = { viewModel.readLedStatus() }) {
+            Text(text = "R")
+        }
+        Spacer(modifier = Modifier.width(5.dp))
+        Box(
+            modifier = Modifier
+                .padding(start = 20.dp, end = 20.dp)
+                .background(getOnOffColor(checkedLed.value), shape = CircleShape)
+                .requiredSize(15.dp)
+        )
+    }
+}
+
+@Composable
+private fun SetLEDStatusCommands(viewModel: CradleClientViewModel) {
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Text(
             modifier = Modifier
@@ -163,7 +173,7 @@ private fun SetLEDStatus(viewModel: CradleClientViewModel) {
 }
 
 @Composable
-private fun SetPIRStatus(viewModel: CradleClientViewModel) {
+private fun SetPIRStatusCommands(viewModel: CradleClientViewModel) {
     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
         Text(
             modifier = Modifier
