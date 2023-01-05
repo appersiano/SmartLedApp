@@ -103,6 +103,7 @@ private fun SetPiRStatusRow(viewModel: CradleClientViewModel) {
                 .padding(start = 20.dp, end = 20.dp)
                 .background(getOnOffColor(checkedPir.value), shape = CircleShape)
                 .requiredSize(15.dp)
+                .align(Alignment.CenterVertically)
         )
     }
 }
@@ -127,6 +128,7 @@ private fun SetLEDStatusRow(viewModel: CradleClientViewModel) {
                 .padding(start = 20.dp, end = 20.dp)
                 .background(getOnOffColor(checkedLed.value), shape = CircleShape)
                 .requiredSize(15.dp)
+                .align(Alignment.CenterVertically)
         )
     }
 }
