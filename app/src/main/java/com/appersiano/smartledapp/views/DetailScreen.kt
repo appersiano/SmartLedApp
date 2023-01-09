@@ -344,7 +344,8 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
 
 @Composable
 fun SetLEDBrightness(viewModel: CradleClientViewModel) {
-    val sliderBrightness = remember { mutableStateOf(0f) }
+    var sliderBrightness by remember { viewModel.brightnessValue }
+
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.align(Alignment.CenterStart)) {
             Icon(
@@ -354,7 +355,7 @@ fun SetLEDBrightness(viewModel: CradleClientViewModel) {
             Spacer(modifier = Modifier.size(5.dp))
             Text(text = "Brightness")
             Spacer(modifier = Modifier.size(5.dp))
-            Text(text = sliderBrightness.value.toInt().toString())
+            Text(text = sliderBrightness.toInt().toString())
 
         }
         Button(
@@ -364,9 +365,9 @@ fun SetLEDBrightness(viewModel: CradleClientViewModel) {
         }
     }
     Slider(
-        value = sliderBrightness.value,
+        value = sliderBrightness,
         onValueChange = {
-            sliderBrightness.value = it
+            sliderBrightness = it
         },
         valueRange = 0f..255f,
         colors = SliderDefaults.colors(
@@ -377,7 +378,7 @@ fun SetLEDBrightness(viewModel: CradleClientViewModel) {
     Button(
         onClick = {
             viewModel.setLEDBrightness(
-                sliderBrightness.value.toLong()
+                sliderBrightness.toLong()
             )
         },
         modifier = Modifier.fillMaxWidth()

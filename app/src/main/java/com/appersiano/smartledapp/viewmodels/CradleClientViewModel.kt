@@ -2,9 +2,14 @@ package com.appersiano.smartledapp.viewmodels
 
 import android.app.Application
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.appersiano.smartledapp.client.CradleLedBleClient
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 
 private const val TAG = "CradleClientViewModel"
 
@@ -16,7 +21,16 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     val bleDeviceStatus = bleClient.deviceConnectionStatus
     val ledStatusBoolean = bleClient.ledStatus.map { it.toBool() }
     val pirStatusBoolean = bleClient.pirStatus.map { it.toBool() }
+    val brightnessValue = mutableStateOf(0f)
     //endregion
+
+    init {
+        viewModelScope.launch {
+            bleClient.brightness.collect {
+                brightnessValue.value = it.toFloat()
+            }
+        }
+    }
 
     fun connect(macAddress: String) {
         bleClient.connect(macAddress)
@@ -47,6 +61,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun setLEDBrightness(value: Long) {
+        brightnessValue.value = value.toFloat()
         bleClient.setLEDBrightness(value)
     }
 
@@ -54,11 +69,23 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         bleClient.setCurrentTime(hour, minute, second, day, month, year)
     }
 
-    fun setTimerFeature(value : Boolean, hourON: Int, minuteON: Int, hourOFF: Int, minuteOFF: Int) {
-        if (value){
-            bleClient.setTimerFeature(CradleLedBleClient.ESwitch.ON, hourON, minuteON, hourOFF, minuteOFF)
+    fun setTimerFeature(value: Boolean, hourON: Int, minuteON: Int, hourOFF: Int, minuteOFF: Int) {
+        if (value) {
+            bleClient.setTimerFeature(
+                CradleLedBleClient.ESwitch.ON,
+                hourON,
+                minuteON,
+                hourOFF,
+                minuteOFF
+            )
         } else {
-            bleClient.setTimerFeature(CradleLedBleClient.ESwitch.OFF, hourON, minuteON, hourOFF, minuteOFF)
+            bleClient.setTimerFeature(
+                CradleLedBleClient.ESwitch.OFF,
+                hourON,
+                minuteON,
+                hourOFF,
+                minuteOFF
+            )
         }
     }
 
@@ -82,7 +109,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         bleClient.readCurrentTime()
     }
 
-    fun readTimerFeature(){
+    fun readTimerFeature() {
         bleClient.readTimerFeature()
     }
 
