@@ -389,14 +389,14 @@ fun SetLEDBrightness(viewModel: CradleClientViewModel) {
 
 @Composable
 fun SetCurrentTime(viewModel: CradleClientViewModel) {
-    val currentDateTime = Calendar.getInstance()
+    val currentDateTime by remember { viewModel.currentTimeValue }
 
-    val hourValue = remember { mutableStateOf(currentDateTime.get(Calendar.HOUR_OF_DAY)) }
-    val minuteValue = remember { mutableStateOf(currentDateTime.get(Calendar.MINUTE)) }
-    val secondValue = remember { mutableStateOf(currentDateTime.get(Calendar.SECOND)) }
-    val dayValue = remember { mutableStateOf(currentDateTime.get(Calendar.DAY_OF_MONTH)) }
-    val monthValue = remember { mutableStateOf(currentDateTime.get(Calendar.MONTH) + 1) }
-    val yearValue = remember { mutableStateOf(currentDateTime.get(Calendar.YEAR) - 2000) }
+    var hourValue = currentDateTime.currentHour
+    var minuteValue = currentDateTime.currentMinute
+    var secondValue = currentDateTime.currentSecond
+    var dayValue = currentDateTime.currentDay
+    var monthValue = currentDateTime.currentMonth
+    var yearValue = currentDateTime.currentYear
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.align(Alignment.CenterStart)) {
@@ -418,13 +418,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
     Row {
         TextField(
             modifier = Modifier.width(100.dp),
-            value = hourValue.value.toString(),
+            value = hourValue.toString(),
             label = { Text("Hour") },
             onValueChange = {
                 try {
-                    hourValue.value = it.trim().toInt()
+                    hourValue = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
-                    hourValue.value = 0
+                    hourValue = 0
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -432,13 +432,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.width(5.dp))
         TextField(
             modifier = Modifier.width(100.dp),
-            value = minuteValue.value.toString(),
+            value = minuteValue.toString(),
             label = { Text("Minute") },
             onValueChange = {
                 try {
-                    minuteValue.value = it.trim().toInt()
+                    minuteValue = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
-                    minuteValue.value = 0
+                    minuteValue = 0
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -446,13 +446,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.width(5.dp))
         TextField(
             modifier = Modifier.width(100.dp),
-            value = secondValue.value.toString(),
+            value = secondValue.toString(),
             label = { Text("Second") },
             onValueChange = {
                 try {
-                    secondValue.value = it.trim().toInt()
+                    secondValue = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
-                    secondValue.value = 0
+                    secondValue = 0
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -461,13 +461,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
     Row {
         TextField(
             modifier = Modifier.width(100.dp),
-            value = dayValue.value.toString(),
+            value = dayValue.toString(),
             label = { Text("Day") },
             onValueChange = {
                 try {
-                    dayValue.value = it.trim().toInt()
+                    dayValue = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
-                    dayValue.value = 0
+                    dayValue = 0
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -475,13 +475,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.width(5.dp))
         TextField(
             modifier = Modifier.width(100.dp),
-            value = monthValue.value.toString(),
+            value = monthValue.toString(),
             label = { Text("Month") },
             onValueChange = {
                 try {
-                    monthValue.value = it.trim().toInt()
+                    monthValue = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
-                    monthValue.value = 0
+                    monthValue = 0
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -489,13 +489,13 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.width(5.dp))
         TextField(
             modifier = Modifier.width(100.dp),
-            value = yearValue.value.toString(),
+            value = yearValue.toString(),
             label = { Text("year") },
             onValueChange = {
                 try {
-                    yearValue.value = it.trim().toInt()
+                    yearValue = it.trim().toInt()
                 } catch (e: java.lang.Exception) {
-                    yearValue.value = 0
+                    yearValue = 0
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -504,12 +504,12 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
     Button(
         onClick = {
             viewModel.setCurrentTime(
-                hourValue.value,
-                minuteValue.value,
-                secondValue.value,
-                dayValue.value,
-                monthValue.value,
-                yearValue.value
+                hourValue,
+                minuteValue,
+                secondValue,
+                dayValue,
+                monthValue,
+                yearValue
             )
         },
         modifier = Modifier.fillMaxWidth()
