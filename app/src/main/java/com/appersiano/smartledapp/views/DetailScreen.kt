@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.appersiano.smartledapp.R
 import com.appersiano.smartledapp.client.CradleLedBleClient
+import com.appersiano.smartledapp.toInt
 import com.appersiano.smartledapp.viewmodels.CradleClientViewModel
 import java.util.*
 
@@ -520,12 +521,7 @@ fun SetCurrentTime(viewModel: CradleClientViewModel) {
 
 @Composable
 fun SetTimerFeature(viewModel: CradleClientViewModel) {
-    val switchValue = remember { mutableStateOf(false) }
-
-    val hourONValue = remember { mutableStateOf(0) }
-    val hourOFFValue = remember { mutableStateOf(0) }
-    val minuteONValue = remember { mutableStateOf(0) }
-    val minuteOFFValue = remember { mutableStateOf(0) }
+    var timerFeature by remember { viewModel.timerFeatureValue }
 
     Box(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.align(Alignment.CenterStart)) {
@@ -554,9 +550,10 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
         )
         Switch(
             modifier = Modifier.padding(start = 16.dp),
-            checked = switchValue.value,
+            checked = timerFeature.timeFeatureStatus.toBool(),
             onCheckedChange = {
-                switchValue.value = it
+                timerFeature =
+                    timerFeature.copy(timeFeatureStatus = CradleLedBleClient.ESwitch.fromInt(it.toInt()))
             })
     }
     Spacer(modifier = Modifier.height(5.dp))
@@ -565,13 +562,13 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.width(10.dp))
         TextField(
             modifier = Modifier.width(100.dp),
-            value = hourONValue.value.toString(),
+            value = timerFeature.switchOnHour.toString(),
             label = { Text("Hour") },
             onValueChange = {
                 try {
-                    hourONValue.value = it.trim().toInt()
+                    timerFeature = timerFeature.copy(switchOnHour = it.trim().toInt())
                 } catch (e: java.lang.Exception) {
-                    hourONValue.value = 0
+                    timerFeature = timerFeature.copy(switchOnHour = 0)
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -579,13 +576,13 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.width(5.dp))
         TextField(
             modifier = Modifier.width(100.dp),
-            value = minuteONValue.value.toString(),
+            value = timerFeature.switchOnMinute.toString(),
             label = { Text("Minute") },
             onValueChange = {
                 try {
-                    minuteONValue.value = it.trim().toInt()
+                    timerFeature = timerFeature.copy(switchOnMinute = it.trim().toInt())
                 } catch (e: java.lang.Exception) {
-                    minuteONValue.value = 0
+                    timerFeature = timerFeature.copy(switchOnMinute = 0)
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -596,13 +593,13 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.width(10.dp))
         TextField(
             modifier = Modifier.width(100.dp),
-            value = hourOFFValue.value.toString(),
+            value = timerFeature.switchOffHour.toString(),
             label = { Text("Hour") },
             onValueChange = {
                 try {
-                    hourOFFValue.value = it.trim().toInt()
+                    timerFeature = timerFeature.copy(switchOffHour = it.trim().toInt())
                 } catch (e: java.lang.Exception) {
-                    hourOFFValue.value = 0
+                    timerFeature = timerFeature.copy(switchOffHour = 0)
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -610,13 +607,13 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
         Spacer(modifier = Modifier.width(5.dp))
         TextField(
             modifier = Modifier.width(100.dp),
-            value = minuteOFFValue.value.toString(),
+            value = timerFeature.switchOffMinute.toString(),
             label = { Text("Minute") },
             onValueChange = {
                 try {
-                    minuteOFFValue.value = it.trim().toInt()
+                    timerFeature = timerFeature.copy(switchOffMinute = it.trim().toInt())
                 } catch (e: java.lang.Exception) {
-                    minuteOFFValue.value = 0
+                    timerFeature = timerFeature.copy(switchOnMinute = 0)
                 }
             },
             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
@@ -624,11 +621,11 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
     }
     Button(onClick = {
         viewModel.setTimerFeature(
-            switchValue.value,
-            hourONValue.value,
-            minuteONValue.value,
-            hourOFFValue.value,
-            minuteOFFValue.value
+            timerFeature.timeFeatureStatus,
+            timerFeature.switchOnHour,
+            timerFeature.switchOnMinute,
+            timerFeature.switchOffHour,
+            timerFeature.switchOffMinute
         )
     }, modifier = Modifier.fillMaxWidth()) {
         Text(text = "Set Timer Feature")

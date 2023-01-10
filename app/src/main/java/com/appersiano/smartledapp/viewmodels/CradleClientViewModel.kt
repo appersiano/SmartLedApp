@@ -118,35 +118,34 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         month: Int,
         year: Int
     ) {
-        val currentTimeDTO = CradleLedBleClient.CurrentTimeDTO(hour, minute, second, day, month, year)
+        val currentTimeDTO =
+            CradleLedBleClient.CurrentTimeDTO(hour, minute, second, day, month, year)
         currentTimeValue.value = currentTimeDTO
         bleClient.setCurrentTime(hour, minute, second, day, month, year)
     }
 
     fun setTimerFeature(
-        value: Boolean,
+        value: CradleLedBleClient.ESwitch,
         hourON: Int,
         minuteON: Int,
         hourOFF: Int,
         minuteOFF: Int
     ) {
-        if (value) {
-            bleClient.setTimerFeature(
-                CradleLedBleClient.ESwitch.ON,
-                hourON,
-                minuteON,
-                hourOFF,
-                minuteOFF
-            )
-        } else {
-            bleClient.setTimerFeature(
-                CradleLedBleClient.ESwitch.OFF,
-                hourON,
-                minuteON,
-                hourOFF,
-                minuteOFF
-            )
-        }
+        timerFeatureValue.value = CradleLedBleClient.FeatureTimerDTO(
+            value,
+            hourON,
+            minuteON,
+            hourOFF,
+            minuteOFF
+        )
+
+        bleClient.setTimerFeature(
+            value,
+            hourON,
+            minuteON,
+            hourOFF,
+            minuteOFF
+        )
     }
 
     fun readLedStatus() {
