@@ -1,5 +1,7 @@
 package com.appersiano.smartledapp.views
 
+import android.util.Log
+import androidx.annotation.ColorRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,11 +14,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.blue
+import androidx.core.graphics.green
+import androidx.core.graphics.red
 import com.appersiano.smartledapp.R
 import com.appersiano.smartledapp.client.CradleLedBleClient
 import com.appersiano.smartledapp.toInt
@@ -219,16 +225,18 @@ private fun SetPIRStatusCommands(viewModel: CradleClientViewModel) {
 @Composable
 private fun SetLEDColor(viewModel: CradleClientViewModel) {
 
-    val mRGBColor = remember { mutableStateOf(Color.Red) }
+    var mRGBColor by remember { viewModel.rgbValue }
 
-    val textValueRed = remember { mutableStateOf(0) }
-    val sliderPositionRed = remember { mutableStateOf(0) }
+    var textValueRed = mRGBColor.red.toString()
+    var sliderPositionRed = mRGBColor.red
 
-    val textValueGreen = remember { mutableStateOf(0) }
-    val sliderPositionGreen = remember { mutableStateOf(0) }
+    var textValueGreen = mRGBColor.green.toString()
+    var sliderPositionGreen = mRGBColor.green
 
-    val textValueBlue = remember { mutableStateOf(0) }
-    val sliderPositionBlue = remember { mutableStateOf(0) }
+    var textValueBlue = mRGBColor.blue.toString()
+    var sliderPositionBlue = mRGBColor.blue
+
+    val composeColor = Color(mRGBColor.red, mRGBColor.green, mRGBColor.blue)
 
     Column {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -247,7 +255,7 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
                 Box(
                     modifier = Modifier
                         .padding(start = 20.dp, end = 20.dp)
-                        .background(mRGBColor.value, shape = CircleShape)
+                        .background(composeColor, shape = CircleShape)
                         .requiredSize(25.dp)
                 )
             }
@@ -261,19 +269,14 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
         Row {
             Text(text = "RED")
             Spacer(modifier = Modifier.size(5.dp))
-            Text(text = textValueRed.value.toString())
+            Text(text = textValueRed)
         }
         Slider(
-            value = sliderPositionRed.value.toFloat(),
+            value = sliderPositionRed.toFloat(),
             onValueChange = {
-                sliderPositionRed.value = it.toInt()
-                textValueRed.value = sliderPositionRed.value
-                updateCircleRGBColor(
-                    mRGBColor,
-                    sliderPositionRed.value,
-                    sliderPositionGreen.value,
-                    sliderPositionBlue.value
-                )
+                Log.i("RGB", "float: ${it}")
+                mRGBColor = android.graphics.Color.rgb(it.toInt(), mRGBColor.green, mRGBColor.blue)
+                textValueRed = sliderPositionRed.toInt().toString()
             },
             valueRange = 0f..255f,
             colors = SliderDefaults.colors(
@@ -284,19 +287,13 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
         Row {
             Text(text = "GREEN")
             Spacer(modifier = Modifier.size(5.dp))
-            Text(text = textValueGreen.value.toString())
+            Text(text = textValueGreen.toString())
         }
         Slider(
-            value = sliderPositionGreen.value.toFloat(),
+            value = sliderPositionGreen.toFloat(),
             onValueChange = {
-                sliderPositionGreen.value = it.toInt()
-                textValueGreen.value = sliderPositionGreen.value
-                updateCircleRGBColor(
-                    mRGBColor,
-                    sliderPositionRed.value,
-                    sliderPositionGreen.value,
-                    sliderPositionBlue.value
-                )
+                mRGBColor = android.graphics.Color.rgb(mRGBColor.red, it.toInt(), mRGBColor.blue)
+                textValueGreen = sliderPositionGreen.toString()
             },
             valueRange = 0f..255f,
             colors = SliderDefaults.colors(
@@ -308,19 +305,13 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
         Row {
             Text(text = "BLUE")
             Spacer(modifier = Modifier.size(5.dp))
-            Text(text = textValueBlue.value.toString())
+            Text(text = textValueBlue)
         }
         Slider(
-            value = sliderPositionBlue.value.toFloat(),
+            value = sliderPositionBlue.toFloat(),
             onValueChange = {
-                sliderPositionBlue.value = it.toInt()
-                textValueBlue.value = sliderPositionBlue.value
-                updateCircleRGBColor(
-                    mRGBColor,
-                    sliderPositionRed.value,
-                    sliderPositionGreen.value,
-                    sliderPositionBlue.value
-                )
+                mRGBColor = android.graphics.Color.rgb(mRGBColor.red,mRGBColor.green,it.toInt())
+                textValueBlue = sliderPositionBlue.toInt().toString()
             },
             valueRange = 0f..255f,
             colors = SliderDefaults.colors(
@@ -332,9 +323,9 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
     Button(
         onClick = {
             viewModel.setLEDColor(
-                sliderPositionRed.value.toLong(),
-                sliderPositionGreen.value.toLong(),
-                sliderPositionBlue.value.toLong()
+                sliderPositionRed,
+                sliderPositionGreen,
+                sliderPositionBlue
             )
         },
         modifier = Modifier.fillMaxWidth()
@@ -630,11 +621,6 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
     }, modifier = Modifier.fillMaxWidth()) {
         Text(text = "Set Timer Feature")
     }
-}
-
-fun updateCircleRGBColor(RGBColor: MutableState<Color>, red: Int, green: Int, blue: Int) {
-    val color = android.graphics.Color.rgb(red, green, blue)
-    RGBColor.value = Color(color)
 }
 
 fun getStatusColor(status: CradleLedBleClient.SDeviceStatus): Color {

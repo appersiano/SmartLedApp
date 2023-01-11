@@ -4,12 +4,10 @@ import android.app.Application
 import android.graphics.Color
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.appersiano.smartledapp.client.CradleLedBleClient
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.appersiano.smartledapp.toInt
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.*
@@ -24,7 +22,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     val bleDeviceStatus = bleClient.deviceConnectionStatus
     val ledStatusBoolean = bleClient.ledStatus.map { it.toBool() }
     val pirStatusBoolean = bleClient.pirStatus.map { it.toBool() }
-    val rgbValue = mutableStateOf(Color.valueOf(0f, 0f, 0f))
+    val rgbValue = mutableStateOf(0)
     val brightnessValue = mutableStateOf(0f)
     val currentTimeValue = mutableStateOf(CradleLedBleClient.CurrentTimeDTO(0, 0, 0, 0, 0, 0))
     val timerFeatureValue = mutableStateOf(
@@ -44,7 +42,6 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
                 rgbValue.value = it
             }
         }
-
         viewModelScope.launch {
             bleClient.brightness.collect {
                 brightnessValue.value = it.toFloat()
@@ -86,22 +83,15 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun setLEDStatus(value: Boolean) {
-        if (value) {
-            bleClient.setLEDStatus(CradleLedBleClient.ESwitch.ON)
-        } else {
-            bleClient.setLEDStatus(CradleLedBleClient.ESwitch.OFF)
-        }
+        bleClient.setLEDStatus(CradleLedBleClient.ESwitch.fromInt(value.toInt()))
     }
 
     fun setPIRStatus(value: Boolean) {
-        if (value) {
-            bleClient.setPIRStatus(CradleLedBleClient.ESwitch.ON)
-        } else {
-            bleClient.setPIRStatus(CradleLedBleClient.ESwitch.OFF)
-        }
+        bleClient.setPIRStatus(CradleLedBleClient.ESwitch.fromInt(value.toInt()))
     }
 
-    fun setLEDColor(red: Long, green: Long, blue: Long) {
+    fun setLEDColor(red: Int, green: Int, blue: Int) {
+        rgbValue.value = Color.rgb(red, green, blue)
         bleClient.setLEDColor(red, green, blue)
     }
 

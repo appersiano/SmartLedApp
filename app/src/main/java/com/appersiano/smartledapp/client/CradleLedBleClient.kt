@@ -42,8 +42,8 @@ class CradleLedBleClient(private val context: Context) {
     private val _pirStatus = MutableSharedFlow<ESwitch>()
     val pirStatus = _pirStatus as SharedFlow<ESwitch>
 
-    private val _ledColor = MutableSharedFlow<Color>()
-    val ledColor = _ledColor as SharedFlow<Color>
+    private val _ledColor = MutableSharedFlow<Int>()
+    val ledColor = _ledColor as SharedFlow<Int>
 
     private val _brightness = MutableSharedFlow<Int>()
     val brightness = _brightness as SharedFlow<Int>
@@ -127,9 +127,9 @@ class CradleLedBleClient(private val context: Context) {
      * @param blue Blue Color
      */
     fun setLEDColor(
-        @IntRange(from = 0L, to = 255L) red: Long,
-        @IntRange(from = 0L, to = 255L) green: Long,
-        @IntRange(from = 0L, to = 255L) blue: Long
+        @IntRange(from = 0L, to = 255L) red: Int,
+        @IntRange(from = 0L, to = 255L) green: Int,
+        @IntRange(from = 0L, to = 255L) blue: Int
     ): Boolean? {
         val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
         val characteristic =
@@ -384,7 +384,7 @@ class CradleLedBleClient(private val context: Context) {
                     val red = characteristic.value[0]
                     val green = characteristic.value[1]
                     val blue = characteristic.value[2]
-                    val color = Color.valueOf(red.toFloat(), green.toFloat(), blue.toFloat())
+                    val color = Color.rgb(red.toInt(), green.toInt(), blue.toInt())
 
                     localScopeStatus.launch {
                         _ledColor.emit(color)
