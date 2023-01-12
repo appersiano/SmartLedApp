@@ -381,9 +381,9 @@ class CradleLedBleClient(private val context: Context) {
                     }
                 }
                 SmartLedUUID.CradleSmartLightService.LEDColor.uuid -> {
-                    val red = characteristic.value[0]
-                    val green = characteristic.value[1]
-                    val blue = characteristic.value[2]
+                    val red : UByte = characteristic.value[0].toUByte()
+                    val green : UByte = characteristic.value[1].toUByte()
+                    val blue : UByte = characteristic.value[2].toUByte()
                     val color = Color.rgb(red.toInt(), green.toInt(), blue.toInt())
 
                     localScopeStatus.launch {
@@ -391,7 +391,7 @@ class CradleLedBleClient(private val context: Context) {
                     }
                 }
                 SmartLedUUID.CradleSmartLightService.LEDBrightness.uuid -> {
-                    val brightness = characteristic.value[0]
+                    val brightness : UByte = characteristic.value[0].toUByte()
 
                     localScopeStatus.launch {
                         _brightness.emit(brightness.toInt())
