@@ -1,7 +1,6 @@
 package com.appersiano.smartledapp.views
 
 import android.util.Log
-import androidx.annotation.ColorRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -92,25 +90,74 @@ fun DetailScreen(
 
 @Composable
 private fun SetPiRStatusRow(viewModel: CradleClientViewModel) {
-    Row(Modifier.height(IntrinsicSize.Min)) {
-        val checkedPir = viewModel.pirStatusBoolean.collectAsState(initial = false)
-        SetPIRStatusCommands(viewModel)
-        Divider(
-            modifier = Modifier
-                .fillMaxHeight()  //fill the max height
-                .width(1.dp)
-        )
-        Spacer(modifier = Modifier.width(5.dp))
-        Button(onClick = { viewModel.readPIRStatus() }) {
-            Text(text = "R")
+    var slideMinBrightness by remember { viewModel.pirMinBrightness }
+    val checkedPir by remember { viewModel.pirStatusBoolean }
+
+    Column {
+        Row {
+            Text(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .wrapContentHeight()
+                    .align(Alignment.CenterVertically),
+                textAlign = TextAlign.Center,
+                text = "PIR Status")
+            Spacer(modifier = Modifier.width(5.dp))
+
+            Button(
+                onClick = {
+                    viewModel.setPIRStatus(slideMinBrightness.toInt(), true)
+                }
+            ) {
+                Text(text = "ON")
+            }
+            Spacer(modifier = Modifier.width(5.dp))
+            Button(
+                onClick = {
+                    viewModel.setPIRStatus(slideMinBrightness.toInt(), false)
+                }
+            ) {
+                Text(text = "OFF")
+            }
+            Spacer(modifier = Modifier.width(5.dp))
+            Divider(
+                modifier = Modifier
+                    .fillMaxHeight()  //fill the max height
+                    .width(1.dp)
+            )
+            Spacer(modifier = Modifier.width(5.dp))
+            Button(onClick = { viewModel.readPIRStatus() }) {
+                Text(text = "R")
+            }
+            Spacer(modifier = Modifier.width(5.dp))
+            Box(
+                modifier = Modifier
+                    .padding(start = 20.dp, end = 20.dp)
+                    .background(getOnOffColor(checkedPir), shape = CircleShape)
+                    .requiredSize(15.dp)
+                    .align(Alignment.CenterVertically)
+            )
         }
-        Spacer(modifier = Modifier.width(5.dp))
-        Box(
-            modifier = Modifier
-                .padding(start = 20.dp, end = 20.dp)
-                .background(getOnOffColor(checkedPir.value), shape = CircleShape)
-                .requiredSize(15.dp)
-                .align(Alignment.CenterVertically)
+        Row {
+            Icon(
+                painter = painterResource(id = R.drawable.ic_baseline_settings_brightness_24),
+                contentDescription = "Brightness"
+            )
+            Spacer(modifier = Modifier.size(5.dp))
+            Text("Min Brightness")
+            Spacer(modifier = Modifier.size(5.dp))
+            Text(text = slideMinBrightness.toInt().toString())
+        }
+        Slider(
+            value = slideMinBrightness,
+            onValueChange = {
+                slideMinBrightness = it
+            },
+            valueRange = 0f..255f,
+            colors = SliderDefaults.colors(
+                thumbColor = MaterialTheme.colors.primary,
+                activeTrackColor = MaterialTheme.colors.primary
+            )
         )
     }
 }
@@ -183,43 +230,7 @@ private fun SetLEDStatusCommands(viewModel: CradleClientViewModel) {
 
 @Composable
 private fun SetPIRStatusCommands(viewModel: CradleClientViewModel) {
-    Row(modifier = Modifier.height(IntrinsicSize.Min)) {
-        Text(
-            modifier = Modifier
-                .fillMaxHeight()
-                .wrapContentHeight(),
-            textAlign = TextAlign.Center,
-            text = "PIR Status"
-        )
 
-        Spacer(
-            modifier = Modifier.width(5.dp)
-        )
-
-        Button(
-            onClick = {
-                viewModel.setPIRStatus(true)
-            }
-        ) {
-            Text(text = "ON")
-        }
-
-        Spacer(
-            modifier = Modifier.width(5.dp)
-        )
-
-        Button(
-            onClick = {
-                viewModel.setPIRStatus(false)
-            }
-        ) {
-            Text(text = "OFF")
-        }
-
-        Spacer(
-            modifier = Modifier.width(5.dp)
-        )
-    }
 }
 
 @Composable
@@ -310,7 +321,7 @@ private fun SetLEDColor(viewModel: CradleClientViewModel) {
         Slider(
             value = sliderPositionBlue.toFloat(),
             onValueChange = {
-                mRGBColor = android.graphics.Color.rgb(mRGBColor.red,mRGBColor.green,it.toInt())
+                mRGBColor = android.graphics.Color.rgb(mRGBColor.red, mRGBColor.green, it.toInt())
                 textValueBlue = sliderPositionBlue.toInt().toString()
             },
             valueRange = 0f..255f,

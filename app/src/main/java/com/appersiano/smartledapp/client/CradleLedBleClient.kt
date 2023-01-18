@@ -39,8 +39,8 @@ class CradleLedBleClient(private val context: Context) {
     private val _ledStatus = MutableSharedFlow<ESwitch>()
     val ledStatus = _ledStatus as SharedFlow<ESwitch>
 
-    private val _pirStatus = MutableSharedFlow<ESwitch>()
-    val pirStatus = _pirStatus as SharedFlow<ESwitch>
+    private val _pirStatus = MutableSharedFlow<SwitchPIRDTO>()
+    val pirStatus = _pirStatus as SharedFlow<SwitchPIRDTO>
 
     private val _ledColor = MutableSharedFlow<Int>()
     val ledColor = _ledColor as SharedFlow<Int>
@@ -110,12 +110,12 @@ class CradleLedBleClient(private val context: Context) {
      *
      * @param value use ESwitch ON/OFF
      */
-    fun setPIRStatus(value: ESwitch): Boolean? {
+    fun setPIRStatus(@IntRange(from = 0L, to = 255L) pirBrightness: Int, value: ESwitch): Boolean? {
         val service = mBluetoothGatt?.getService(SmartLedUUID.CradleSmartLightService.uuid)
         val characteristic =
             service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.PIRStatus.uuid)
 
-        val payload = byteArrayOf(value.value.toByte())
+        val payload = byteArrayOf(value.value.toByte(), pirBrightness.toByte())
         return sendCommand(characteristic, payload)
     }
 
@@ -176,8 +176,10 @@ class CradleLedBleClient(private val context: Context) {
         val characteristic =
             service?.getCharacteristic(SmartLedUUID.CradleSmartLightService.CurrentTime.uuid)
 
-        val payload = byteArrayOf(hour.toByte(), minute.toByte(), second.toByte(),
-            day.toByte(), month.toByte(), year.toByte())
+        val payload = byteArrayOf(
+            hour.toByte(), minute.toByte(), second.toByte(),
+            day.toByte(), month.toByte(), year.toByte()
+        )
         return sendCommand(characteristic, payload)
     }
 
@@ -366,7 +368,10 @@ class CradleLedBleClient(private val context: Context) {
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
-            Log.d(TAG, "📖 onCharacteristicRead: ${characteristic?.uuid}, Data: ${characteristic?.value.contentToString()}")
+            Log.d(
+                TAG,
+                "📖 onCharacteristicRead: ${characteristic?.uuid}, Data: ${characteristic?.value.contentToString()}"
+            )
             when (characteristic?.uuid) {
                 SmartLedUUID.CradleSmartLightService.LEDStatus.uuid -> {
                     val ledStatus = characteristic.value[0]
@@ -376,14 +381,17 @@ class CradleLedBleClient(private val context: Context) {
                 }
                 SmartLedUUID.CradleSmartLightService.PIRStatus.uuid -> {
                     val pirStatus = characteristic.value[0]
+                    val minBrightness = characteristic.value[1].toUByte().toInt()
+                    val pirSwitch = SwitchPIRDTO(ESwitch.fromInt(pirStatus.toInt()), minBrightness)
+
                     localScopeStatus.launch {
-                        _pirStatus.emit(ESwitch.fromInt(pirStatus.toInt()))
+                        _pirStatus.emit(pirSwitch)
                     }
                 }
                 SmartLedUUID.CradleSmartLightService.LEDColor.uuid -> {
-                    val red : UByte = characteristic.value[0].toUByte()
-                    val green : UByte = characteristic.value[1].toUByte()
-                    val blue : UByte = characteristic.value[2].toUByte()
+                    val red: UByte = characteristic.value[0].toUByte()
+                    val green: UByte = characteristic.value[1].toUByte()
+                    val blue: UByte = characteristic.value[2].toUByte()
                     val color = Color.rgb(red.toInt(), green.toInt(), blue.toInt())
 
                     localScopeStatus.launch {
@@ -391,7 +399,7 @@ class CradleLedBleClient(private val context: Context) {
                     }
                 }
                 SmartLedUUID.CradleSmartLightService.LEDBrightness.uuid -> {
-                    val brightness : UByte = characteristic.value[0].toUByte()
+                    val brightness: UByte = characteristic.value[0].toUByte()
 
                     localScopeStatus.launch {
                         _brightness.emit(brightness.toInt())
@@ -491,6 +499,11 @@ class CradleLedBleClient(private val context: Context) {
         val switchOnMinute: Int,
         val switchOffHour: Int,
         val switchOffMinute: Int,
+    )
+
+    data class SwitchPIRDTO(
+        val switch: ESwitch,
+        val minBrightness: Int
     )
     //endregion
 

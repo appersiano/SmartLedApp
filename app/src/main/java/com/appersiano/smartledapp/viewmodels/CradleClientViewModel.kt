@@ -21,7 +21,8 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     //region MutableStateFlow
     val bleDeviceStatus = bleClient.deviceConnectionStatus
     val ledStatusBoolean = bleClient.ledStatus.map { it.toBool() }
-    val pirStatusBoolean = bleClient.pirStatus.map { it.toBool() }
+    val pirStatusBoolean = mutableStateOf(false)
+    val pirMinBrightness = mutableStateOf(0f)
     val rgbValue = mutableStateOf(0)
     val brightnessValue = mutableStateOf(0f)
     val currentTimeValue = mutableStateOf(CradleLedBleClient.CurrentTimeDTO(0, 0, 0, 0, 0, 0))
@@ -58,6 +59,13 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
             }
         }
 
+        viewModelScope.launch {
+            bleClient.pirStatus.collect {
+                pirStatusBoolean.value = it.switch.toBool()
+                pirMinBrightness.value = it.minBrightness.toFloat()
+            }
+        }
+
         initCurrentTime()
     }
 
@@ -86,8 +94,10 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         bleClient.setLEDStatus(CradleLedBleClient.ESwitch.fromInt(value.toInt()))
     }
 
-    fun setPIRStatus(value: Boolean) {
-        bleClient.setPIRStatus(CradleLedBleClient.ESwitch.fromInt(value.toInt()))
+    fun setPIRStatus(minBrightness: Int, value: Boolean) {
+        this.pirMinBrightness.value = minBrightness.toFloat()
+        pirStatusBoolean.value = value
+        bleClient.setPIRStatus(minBrightness, CradleLedBleClient.ESwitch.fromInt(value.toInt()))
     }
 
     fun setLEDColor(red: Int, green: Int, blue: Int) {
