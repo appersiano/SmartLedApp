@@ -3,9 +3,14 @@ package com.appersiano.smartledapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,6 +20,7 @@ import com.appersiano.smartledapp.viewmodels.CradleClientViewModel
 import com.appersiano.smartledapp.viewmodels.ScannerViewModel
 import com.appersiano.smartledapp.views.DetailScreen
 import com.appersiano.smartledapp.views.MainScreen
+import com.appersiano.smartledapp.views.RemoteControlScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,7 +36,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(
                         navController = navController,
-                        startDestination = "main",
+                        startDestination = "test",
                     ) {
                         composable(route = "main") {
                             MainScreen(
@@ -62,6 +68,15 @@ class MainActivity : ComponentActivity() {
                                     status = bleClient.bleDeviceStatus.collectAsState().value,
                                     viewModel = bleClient
                                 )
+                            }
+                        }
+
+                        composable(route = "test") {
+                            Surface(
+                                color = Color(0xFF1E1E1E),
+                                modifier = Modifier.fillMaxHeight()
+                            ) {
+                                RemoteControlScreen()
                             }
                         }
                     }
