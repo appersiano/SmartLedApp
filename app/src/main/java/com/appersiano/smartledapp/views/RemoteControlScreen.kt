@@ -1,7 +1,5 @@
 package com.appersiano.smartledapp.views
 
-import android.graphics.Rect
-import android.graphics.RectF
 import android.graphics.Region
 import android.util.Log
 import androidx.compose.foundation.*
@@ -9,10 +7,7 @@ import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -44,7 +39,8 @@ fun RemoteControlScreen(
             .verticalScroll(scrollState)
             .fillMaxHeight()
     ) {
-        TopColorSelectionRow()
+        var showTemperature = remember { mutableStateOf(false) }
+        TopColorSelectionRow(showTemperature.value)
 //        OffStateScreen(modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Green))
         Column(
             modifier = Modifier
@@ -52,7 +48,7 @@ fun RemoteControlScreen(
                 .zIndex(10f)
         ) {
             Spacer(modifier = Modifier.size(32.dp))
-            ColorOrTemperatureRow()
+            ColorOrTemperatureRow(showTemperature)
             SeekBarBrightness()
             SelectionSceneRow()
             Divider(thickness = 1.dp, color = Color.Gray)
@@ -112,6 +108,7 @@ private fun HalfArcGradient(modifier: Modifier, currentSelectedColor: MutableSta
 }
 
 private const val TAG = "RemoteControlScreen"
+
 @Composable
 fun ColorPickerWheel(
     onSelectedColor: (Color) -> Unit,
@@ -284,7 +281,7 @@ fun getRandomColor(): Int {
 
 
 @Composable
-fun TopColorSelectionRow() {
+fun TopColorSelectionRow(showTemperature: Boolean = false) {
     val currentSelectedColor = remember { mutableStateOf(Color.Red) }
     Box(
         modifier = Modifier
@@ -298,7 +295,7 @@ fun TopColorSelectionRow() {
             }, onDragEnd = {
                 //viewodel.setColor(it)
             },
-            true
+            showTemperature
         )
         HalfArcGradient(
             modifier = Modifier
@@ -332,7 +329,7 @@ fun TopColorSelectionRow() {
 }
 
 @Composable
-fun ColorOrTemperatureRow() {
+fun ColorOrTemperatureRow(showTemperature: MutableState<Boolean>) {
     Row(
         modifier = Modifier
             .padding(start = 16.dp, end = 8.dp, top = 16.dp)
@@ -340,11 +337,17 @@ fun ColorOrTemperatureRow() {
         horizontalArrangement = Arrangement.Center
     ) {
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {
+                showTemperature.value = false
+            },
             modifier = Modifier
                 .width(143.dp)
                 .height(76.dp)
-                .border(1.dp, Color.White, shape = RoundedCornerShape(24.dp)),
+                .border(
+                    1.dp,
+                    if (!showTemperature.value) Color.White else Color.Transparent,
+                    shape = RoundedCornerShape(24.dp)
+                ),
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color(0xFF323035), contentColor = Color.White
             ),
@@ -354,11 +357,17 @@ fun ColorOrTemperatureRow() {
         }
         Spacer(Modifier.weight(1f))
         Button(
-            onClick = { /*TODO*/ },
+            onClick = {
+                showTemperature.value = true
+            },
             modifier = Modifier
                 .width(143.dp)
                 .height(76.dp)
-                .border(1.dp, Color.White, shape = RoundedCornerShape(24.dp)),
+                .border(
+                    1.dp,
+                    if (showTemperature.value) Color.White else Color.Transparent,
+                    shape = RoundedCornerShape(24.dp)
+                ),
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = Color(0xFF323035), contentColor = Color.White
             ),
