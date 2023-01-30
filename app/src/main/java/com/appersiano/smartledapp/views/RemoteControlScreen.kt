@@ -1,24 +1,34 @@
 package com.appersiano.smartledapp.views
 
+import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.Region
+import android.util.Log
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import com.appersiano.smartledapp.R
+import kotlin.random.Random
 
 @Composable
 fun RemoteControlScreen(
@@ -29,13 +39,18 @@ fun RemoteControlScreen(
 //    status: CradleLedBleClient.SDeviceStatus,
 ) {
     val scrollState = rememberScrollState()
-    Column(
+    Box(
         Modifier
             .verticalScroll(scrollState)
             .fillMaxHeight()
     ) {
         TopColorSelectionRow()
-        Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp)) {
+//        OffStateScreen(modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Green))
+        Column(
+            modifier = Modifier
+                .padding(top = 250.dp, start = 16.dp, end = 16.dp)
+                .zIndex(10f)
+        ) {
             Spacer(modifier = Modifier.size(32.dp))
             ColorOrTemperatureRow()
             SeekBarBrightness()
@@ -50,13 +65,40 @@ fun RemoteControlScreen(
 }
 
 @Composable
-private fun HalfArcGradient(modifier: Modifier) {
+private fun OffStateScreen(modifier: Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_led_strips),
+            contentDescription = "Led Strips Icon"
+        )
+        Text(
+            modifier = Modifier.padding(top = 32.dp),
+            text = "Funzioni disabilitate",
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        Text(
+            text = "Per abilitare nuovamente le funzioni,\naccendi la luce",
+            color = Color.White,
+            textAlign = TextAlign.Center,
+            fontSize = 12.sp
+        )
+    }
+}
+
+@Composable
+private fun HalfArcGradient(modifier: Modifier, currentSelectedColor: MutableState<Color>) {
     Canvas(
         modifier = modifier
     ) {
         drawArc(
             brush = Brush.radialGradient(
-                colors = listOf(Color(0xFFE55D5D), Color(0x00E55D5D)),
+                colors = listOf(currentSelectedColor.value, Color(0x00E55D5D)),
                 center = Offset(x = 150.dp.toPx(), y = 0.dp.toPx()),
                 tileMode = TileMode.Clamp,
                 radius = 150.dp.toPx()
@@ -69,74 +111,201 @@ private fun HalfArcGradient(modifier: Modifier) {
     }
 }
 
+private const val TAG = "RemoteControlScreen"
 @Composable
-private fun CircularGradientPicker(modifier: Modifier) {
-    Canvas(
-        modifier = modifier
-    ) {
-        drawArc(
-            brush = Brush.radialGradient(
-                colors = listOf(Color(0xFFE55D5D), Color(0x00E55D5D)),
-                center = Offset(x = 150.dp.toPx(), y = 0.dp.toPx()),
-                tileMode = TileMode.Clamp,
-                radius = 150.dp.toPx()
-            ),
-            startAngle = 0f,
-            sweepAngle = 180f,
-            useCenter = true,
-            topLeft = Offset(x = 0.dp.toPx(), y = -150.dp.toPx())
-        )
-    }
-}
-
-@Preview
-@Composable
-fun PreviewPicker() {
+fun ColorPickerWheel(
+    onSelectedColor: (Color) -> Unit,
+    onDragEnd: (Color) -> Unit,
+    showTemperature: Boolean = false
+) {
+    val viewSize = 520.dp
     val widthElement = 6.dp
-    val halfWidthElement = 6.dp / 2
     val heightElement = 50.dp
-    val halfHeightElement = 50.dp / 2
+
+    val offsetX = remember { mutableStateOf(0f) }
+    val lineLists = remember { mutableListOf<Path>() }
+    val elementsColor = remember { mutableListOf<Color>() }
+    var elementsColorTemperature = remember { listOf<Color>() }
+    val selectedColor = remember { mutableStateOf(Color.Unspecified) }
+
+    lineLists.clear()
+    elementsColor.clear()
+
+    if (showTemperature) {
+        elementsColorTemperature = LEDTemperatureUtils.generateTemperatureArray(120)
+    }
+
     Canvas(
-        modifier = Modifier.size(300.dp)
-    ) {
-        val rect = Rect(Offset.Zero, Size(widthElement.toPx(), heightElement.toPx()))
-        for (i in 1..340 step 6){
-            rotate(degrees = -i.toFloat()) {
-                drawRect(
-                    color = Color.Red,
-                    size = Size(width = widthElement.toPx(), height = heightElement.toPx()),
-                    topLeft = Offset(
-                        x = 155.dp.toPx(),
-                        y = 300.dp.toPx() - heightElement.toPx()
+        modifier = Modifier
+            .size(viewSize)
+            .pointerInput(Unit) {
+                detectDragGestures(onDrag = { change, dragAmount ->
+                    change.consume()
+                    offsetX.value -= (dragAmount.x / 10)
+
+                    val region = Region()
+                    val left = this.size.width / 2 - widthElement.toPx() / 2
+                    val top = (this.size.height - heightElement.toPx()).toInt()
+                    val right = (this.size.width / 2 + widthElement.toPx() / 2).toInt()
+                    val bottom = this.size.height
+
+                    region.set(
+                        left.toInt(),
+                        top,
+                        right,
+                        bottom
                     )
-                )
+
+                    Log.i(
+                        "REGION",
+                        "Region Coordinates: left $left top $top right $right bottom $bottom"
+                    )
+
+                    lineLists.forEachIndexed { index, currentPath ->
+                        val leftPath = currentPath.getBounds().left.toInt()
+                        val topPath = currentPath.getBounds().top.toInt()
+                        val rightPath = currentPath.getBounds().right.toInt()
+                        val bottomPath = currentPath.getBounds().bottom.toInt()
+
+                        Log.i(
+                            "REGION",
+                            "Current Path Coordinates: index ($index) left $leftPath top $topPath right $rightPath bottom $bottomPath"
+                        )
+
+                        if (region.contains(
+                                leftPath,
+                                topPath
+                            )
+                        ) {
+                            selectedColor.value = elementsColor.toList()[index]
+                            onSelectedColor.invoke(selectedColor.value)
+                            return@detectDragGestures
+                        }
+                    }
+
+
+                }, onDragEnd = {
+                    //callback to send command
+                    onDragEnd.invoke(selectedColor.value)
+                })
             }
-        }
+    ) {
 
-        drawRect(
-            color = Color.Yellow,
-            size = Size(width = widthElement.toPx(), height = heightElement.toPx()),
-            topLeft = Offset(
-                x = 150.dp.toPx() - halfWidthElement.toPx(),
-                y = 300.dp.toPx() - heightElement.toPx()
+        lineLists.clear()
+        elementsColor.clear()
+
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+        val radius = 4.dp.toPx()
+
+        Log.i(TAG, "Offset degrees ->" + offsetX.value)
+        Log.i(TAG, "Canvas Size: $canvasWidth X $canvasHeight")
+        //translate let show "half" circle outside the screen
+        val translateY = -750f
+        translate(top = translateY) {
+            //this let rotate the while when dragged horizontally
+            rotate(degrees = offsetX.value) {
+                var hue = 0f//175f
+                //this for effectively create the wheel
+                for (i in 0 until 360 step 3) {
+//                    val i = 0 - offsetX.value
+                    Log.i(TAG, "------------------")
+//                    Log.i("REGION ", "Picker current degrees -> ${i - offsetX.value}")
+                    rotate(degrees = -i.toFloat()) {
+                        val calcColor: Color
+                        val currentHueCalculated: Float
+                        if (showTemperature) {
+                            calcColor = elementsColorTemperature[i / 3]
+                        } else {
+                            currentHueCalculated = hue + 3f
+
+                            hue = if (currentHueCalculated <= 360f) {
+                                currentHueCalculated
+                            } else {
+                                0f
+                            }
+
+                            calcColor = Color.hsl(hue, 0.72f, 0.63f)
+                        }
+
+                        Log.i("ADDCOLOR", "Add color $calcColor")
+                        elementsColor.add(calcColor)
+
+                        val startPoint = Offset(
+                            x = this.center.x,
+                            y = this.size.height - (heightElement.toPx())
+                        )
+                        val endPoint = Offset(
+                            x = this.center.x,
+                            y = this.size.height
+                        )
+
+                        val matrix = android.graphics.Matrix()
+//                        Log.i("REGION", "---------------------------------")
+//                        Log.i("REGION", "Calculated i degrees -> " + -i.toFloat())
+//                        Log.i("REGION", "Calculated offeser degrees -> " + offsetX.value)
+                        matrix.setRotate(-i.toFloat() + offsetX.value, this.center.x, this.center.y)
+                        val pts = floatArrayOf(startPoint.x, startPoint.y, endPoint.x, endPoint.y)
+                        matrix.mapPoints(pts)
+
+                        val path = Path().apply {
+                            moveTo(pts[0], pts[1])
+                            lineTo(pts[2], pts[3])
+                        }
+                        lineLists.add(path)
+
+                        drawLine(
+                            color = calcColor,
+                            start = startPoint,
+                            end = endPoint,
+                            strokeWidth = 6.dp.toPx()
+                        )
+                    }
+                }
+            }
+
+            //Small White Dot over the selected color
+            drawCircle(
+                color = Color.White,
+                center = Offset(
+                    x = canvasWidth / 2,
+                    y = canvasHeight - heightElement.toPx() - radius * 2
+                ),
+                radius = radius
             )
-        )
-
+        }
     }
 }
+
+fun getRandomColor(): Int {
+    val rnd = Random(255)
+    return android.graphics.Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
+}
+
 
 @Composable
 fun TopColorSelectionRow() {
+    val currentSelectedColor = remember { mutableStateOf(Color.Red) }
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .fillMaxHeight(),
+            .wrapContentHeight()
+            .zIndex(1f),
     ) {
+        ColorPickerWheel(
+            onSelectedColor = {
+                currentSelectedColor.value = it
+            }, onDragEnd = {
+                //viewodel.setColor(it)
+            },
+            true
+        )
         HalfArcGradient(
             modifier = Modifier
                 .height(150.dp)
                 .width(300.dp)
-                .align(Alignment.TopCenter)
+                .align(Alignment.TopCenter),
+            currentSelectedColor
         )
         Column(
             modifier = Modifier
@@ -147,13 +316,16 @@ fun TopColorSelectionRow() {
             IconButton(onClick = { }) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_on_off_icon),
-                    contentDescription = "Butt"
+                    contentDescription = "Button ON/OFF"
                 )
             }
             Text(
                 modifier = Modifier.padding(top = 10.dp),
-                text = "Scorri la ruota per scegliere una tonalità",
-                color = Color.White
+                text = "Scorri la ruota per scegliere una\ntonalità",
+                color = Color.White,
+                fontSize = 12.sp,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold
             )
         }
     }
@@ -202,7 +374,7 @@ fun SeekBarBrightness() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp),
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -219,8 +391,11 @@ fun SeekBarBrightness() {
             onValueChangeFinished = {
                 // launch some business logic update with the state you hold
             },
-
+            colors = SliderDefaults.colors(
+                thumbColor = Color.White,
+                activeTrackColor = Color.White
             )
+        )
         Spacer(modifier = Modifier.size(16.dp))
         Text(text = "50%", color = Color.White)
     }
