@@ -1,5 +1,6 @@
 package com.appersiano.smartledapp.views
 
+import android.app.TimePickerDialog
 import android.graphics.Region
 import android.util.Log
 import androidx.compose.foundation.*
@@ -15,6 +16,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.appersiano.smartledapp.R
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.random.Random
 
 @Composable
@@ -34,28 +38,45 @@ fun RemoteControlScreen(
 //    status: CradleLedBleClient.SDeviceStatus,
 ) {
     val scrollState = rememberScrollState()
+
+    val isLedEnable = remember { mutableStateOf(false) }
+    val showTemperature = remember { mutableStateOf(false) }
     Box(
         Modifier
             .verticalScroll(scrollState)
             .fillMaxHeight()
     ) {
-        var showTemperature = remember { mutableStateOf(false) }
-        TopColorSelectionRow(showTemperature.value)
-//        OffStateScreen(modifier = Modifier.fillMaxHeight().fillMaxWidth().background(Color.Green))
-        Column(
-            modifier = Modifier
-                .padding(top = 250.dp, start = 16.dp, end = 16.dp)
-                .zIndex(10f)
-        ) {
-            Spacer(modifier = Modifier.size(32.dp))
-            ColorOrTemperatureRow(showTemperature)
-            SeekBarBrightness()
-            SelectionSceneRow()
-            Divider(thickness = 1.dp, color = Color.Gray)
-            PIRFunctionRow()
-            Divider(thickness = 1.dp, color = Color.Gray)
-            ProgrammingOnOffRow()
-            OnOffButtonsRow()
+
+        TopColorSelectionRow(showTemperature.value, isLedEnable)
+        if (!isLedEnable.value) {
+            Column(
+                modifier = Modifier
+                    .padding(top = 400.dp)
+                    .fillMaxHeight()
+                    .zIndex(10f)
+            ) {
+                OffStateScreen(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth()
+                )
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .padding(top = 250.dp, start = 16.dp, end = 16.dp)
+                    .zIndex(10f)
+            ) {
+                Spacer(modifier = Modifier.size(32.dp))
+                ColorOrTemperatureRow(showTemperature)
+                SeekBarBrightness()
+                //SelectionSceneRow()
+                Divider(thickness = 1.dp, color = Color.Gray)
+                PIRFunctionRow()
+                Divider(thickness = 1.dp, color = Color.Gray)
+                ProgrammingOnOffRow()
+                OnOffButtonsRow()
+            }
         }
     }
 }
@@ -94,7 +115,7 @@ private fun HalfArcGradient(modifier: Modifier, currentSelectedColor: MutableSta
     ) {
         drawArc(
             brush = Brush.radialGradient(
-                colors = listOf(currentSelectedColor.value, Color(0x00E55D5D)),
+                colors = listOf(currentSelectedColor.value, Color(0x00272530)),
                 center = Offset(x = 150.dp.toPx(), y = 0.dp.toPx()),
                 tileMode = TileMode.Clamp,
                 radius = 150.dp.toPx()
@@ -113,7 +134,8 @@ private const val TAG = "RemoteControlScreen"
 fun ColorPickerWheel(
     onSelectedColor: (Color) -> Unit,
     onDragEnd: (Color) -> Unit,
-    showTemperature: Boolean = false
+    showTemperature: Boolean = false,
+    isLedEnabled: MutableState<Boolean>
 ) {
     val viewSize = 520.dp
     val widthElement = 6.dp
@@ -128,8 +150,12 @@ fun ColorPickerWheel(
     lineLists.clear()
     elementsColor.clear()
 
-    if (showTemperature) {
-        elementsColorTemperature = LEDTemperatureUtils.generateTemperatureArray(120)
+    if (isLedEnabled.value) {
+        if (showTemperature) {
+            elementsColorTemperature = LEDTemperatureUtils.generateTemperatureArray(120)
+        }
+    } else {
+
     }
 
     Canvas(
@@ -137,49 +163,50 @@ fun ColorPickerWheel(
             .size(viewSize)
             .pointerInput(Unit) {
                 detectDragGestures(onDrag = { change, dragAmount ->
-                    change.consume()
-                    offsetX.value -= (dragAmount.x / 10)
+                    if (isLedEnabled.value) {
+                        change.consume()
+                        offsetX.value -= (dragAmount.x / 10)
 
-                    val region = Region()
-                    val left = this.size.width / 2 - widthElement.toPx() / 2
-                    val top = (this.size.height - heightElement.toPx()).toInt()
-                    val right = (this.size.width / 2 + widthElement.toPx() / 2).toInt()
-                    val bottom = this.size.height
+                        val region = Region()
+                        val left = this.size.width / 2 - widthElement.toPx() / 2
+                        val top = (this.size.height - heightElement.toPx()).toInt()
+                        val right = (this.size.width / 2 + widthElement.toPx() / 2).toInt()
+                        val bottom = this.size.height
 
-                    region.set(
-                        left.toInt(),
-                        top,
-                        right,
-                        bottom
-                    )
-
-                    Log.i(
-                        "REGION",
-                        "Region Coordinates: left $left top $top right $right bottom $bottom"
-                    )
-
-                    lineLists.forEachIndexed { index, currentPath ->
-                        val leftPath = currentPath.getBounds().left.toInt()
-                        val topPath = currentPath.getBounds().top.toInt()
-                        val rightPath = currentPath.getBounds().right.toInt()
-                        val bottomPath = currentPath.getBounds().bottom.toInt()
+                        region.set(
+                            left.toInt(),
+                            top,
+                            right,
+                            bottom
+                        )
 
                         Log.i(
                             "REGION",
-                            "Current Path Coordinates: index ($index) left $leftPath top $topPath right $rightPath bottom $bottomPath"
+                            "Region Coordinates: left $left top $top right $right bottom $bottom"
                         )
 
-                        if (region.contains(
-                                leftPath,
-                                topPath
+                        lineLists.forEachIndexed { index, currentPath ->
+                            val leftPath = currentPath.getBounds().left.toInt()
+                            val topPath = currentPath.getBounds().top.toInt()
+                            val rightPath = currentPath.getBounds().right.toInt()
+                            val bottomPath = currentPath.getBounds().bottom.toInt()
+
+                            Log.i(
+                                "REGION",
+                                "Current Path Coordinates: index ($index) left $leftPath top $topPath right $rightPath bottom $bottomPath"
                             )
-                        ) {
-                            selectedColor.value = elementsColor.toList()[index]
-                            onSelectedColor.invoke(selectedColor.value)
-                            return@detectDragGestures
+
+                            if (region.contains(
+                                    leftPath,
+                                    topPath
+                                )
+                            ) {
+                                selectedColor.value = elementsColor.toList()[index]
+                                onSelectedColor.invoke(selectedColor.value)
+                                return@detectDragGestures
+                            }
                         }
                     }
-
 
                 }, onDragEnd = {
                     //callback to send command
@@ -211,18 +238,22 @@ fun ColorPickerWheel(
                     rotate(degrees = -i.toFloat()) {
                         val calcColor: Color
                         val currentHueCalculated: Float
-                        if (showTemperature) {
-                            calcColor = elementsColorTemperature[i / 3]
-                        } else {
-                            currentHueCalculated = hue + 3f
-
-                            hue = if (currentHueCalculated <= 360f) {
-                                currentHueCalculated
+                        if (isLedEnabled.value) {
+                            if (showTemperature) {
+                                calcColor = elementsColorTemperature[i / 3]
                             } else {
-                                0f
-                            }
+                                currentHueCalculated = hue + 3f
 
-                            calcColor = Color.hsl(hue, 0.72f, 0.63f)
+                                hue = if (currentHueCalculated <= 360f) {
+                                    currentHueCalculated
+                                } else {
+                                    0f
+                                }
+
+                                calcColor = Color.hsl(hue, 0.72f, 0.63f)
+                            }
+                        } else {
+                            calcColor = Color.White
                         }
 
                         Log.i("ADDCOLOR", "Add color $calcColor")
@@ -251,25 +282,37 @@ fun ColorPickerWheel(
                         }
                         lineLists.add(path)
 
-                        drawLine(
-                            color = calcColor,
-                            start = startPoint,
-                            end = endPoint,
-                            strokeWidth = 6.dp.toPx()
-                        )
+                        if (isLedEnabled.value) {
+                            drawLine(
+                                color = calcColor,
+                                start = startPoint,
+                                end = endPoint,
+                                strokeWidth = 6.dp.toPx()
+                            )
+                        } else {
+                            val brush = Brush.horizontalGradient(listOf(Color.Black, Color.White))
+                            drawLine(
+                                start = startPoint,
+                                end = endPoint,
+                                strokeWidth = 6.dp.toPx(),
+                                brush = brush
+                            )
+                        }
                     }
                 }
             }
 
             //Small White Dot over the selected color
-            drawCircle(
-                color = Color.White,
-                center = Offset(
-                    x = canvasWidth / 2,
-                    y = canvasHeight - heightElement.toPx() - radius * 2
-                ),
-                radius = radius
-            )
+            if (isLedEnabled.value) {
+                drawCircle(
+                    color = Color.White,
+                    center = Offset(
+                        x = canvasWidth / 2,
+                        y = canvasHeight - heightElement.toPx() - radius * 2
+                    ),
+                    radius = radius
+                )
+            }
         }
     }
 }
@@ -281,8 +324,13 @@ fun getRandomColor(): Int {
 
 
 @Composable
-fun TopColorSelectionRow(showTemperature: Boolean = false) {
+fun TopColorSelectionRow(showTemperature: Boolean, isLedEnabled: MutableState<Boolean>) {
     val currentSelectedColor = remember { mutableStateOf(Color.Red) }
+    if (isLedEnabled.value){
+        //color from viewmodel
+    } else {
+        currentSelectedColor.value = Color(0xFF919191)
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -295,7 +343,8 @@ fun TopColorSelectionRow(showTemperature: Boolean = false) {
             }, onDragEnd = {
                 //viewodel.setColor(it)
             },
-            showTemperature
+            showTemperature,
+            isLedEnabled
         )
         HalfArcGradient(
             modifier = Modifier
@@ -310,7 +359,11 @@ fun TopColorSelectionRow(showTemperature: Boolean = false) {
                 .padding(top = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            IconButton(onClick = { }) {
+            IconToggleButton(
+                checked = isLedEnabled.value,
+                onCheckedChange = {
+                    isLedEnabled.value = it
+                }) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_on_off_icon),
                     contentDescription = "Button ON/OFF"
@@ -380,6 +433,39 @@ fun ColorOrTemperatureRow(showTemperature: MutableState<Boolean>) {
 
 @Composable
 fun SeekBarBrightness() {
+    var brightness by remember { mutableStateOf(50) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_brightness),
+            contentDescription = "Brightness"
+        )
+        Spacer(modifier = Modifier.size(16.dp))
+        Slider(
+            modifier = Modifier.weight(1f),
+            value = brightness.toFloat(),
+            onValueChange = { brightness = it.toInt() },
+            valueRange = 0f..100f,
+            onValueChangeFinished = {
+                // launch some business logic update with the state you hold
+            },
+            colors = SliderDefaults.colors(
+                thumbColor = Color.White,
+                activeTrackColor = Color.White
+            )
+        )
+        Spacer(modifier = Modifier.size(16.dp))
+        Text(text = "${brightness}%", color = Color.White)
+    }
+}
+
+@Composable
+fun SeekBarMinBrightness() {
+    var brightness by remember { mutableStateOf(50) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -393,10 +479,9 @@ fun SeekBarBrightness() {
         Spacer(modifier = Modifier.size(16.dp))
         Slider(
             modifier = Modifier.weight(1f),
-            value = 50f,
-            onValueChange = { /* TODO */ },
+            value = brightness.toFloat(),
+            onValueChange = { brightness = it.toInt() },
             valueRange = 0f..100f,
-            steps = 1,
             onValueChangeFinished = {
                 // launch some business logic update with the state you hold
             },
@@ -406,7 +491,7 @@ fun SeekBarBrightness() {
             )
         )
         Spacer(modifier = Modifier.size(16.dp))
-        Text(text = "50%", color = Color.White)
+        Text(text = "${brightness}%", color = Color.White)
     }
 }
 
@@ -432,6 +517,7 @@ fun SelectionSceneRow() {
 
 @Composable
 fun PIRFunctionRow() {
+    val checkedState = remember { mutableStateOf(true) }
     Column(Modifier.padding(16.dp, bottom = 24.dp, top = 24.dp)) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -441,9 +527,17 @@ fun PIRFunctionRow() {
                 fontSize = 16.sp
             )
             Spacer(Modifier.weight(1f))
-            Image(
-                painter = painterResource(id = R.drawable.ic_arrow_right),
-                contentDescription = "Select Scene"
+            Switch(
+                checked = checkedState.value,
+                onCheckedChange = { checkedState.value = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    uncheckedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF3FA02F),
+                    uncheckedTrackColor = Color.Gray,
+                    checkedTrackAlpha = 1.0f,
+                    uncheckedTrackAlpha = 1.0f
+                )
             )
         }
         Text(
@@ -452,25 +546,38 @@ fun PIRFunctionRow() {
             fontSize = 12.sp,
             modifier = Modifier.padding(top = 4.dp)
         )
+        if (checkedState.value) {
+            SeekBarMinBrightness()
+        }
     }
 }
 
 @Composable
 fun ProgrammingOnOffRow() {
+    val checkedState = remember { mutableStateOf(true) }
     Column(Modifier.padding(16.dp, bottom = 24.dp, top = 24.dp)) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
             Text(
                 "Programmmazione",
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
+                fontSize = 16.sp,
             )
             Spacer(Modifier.weight(1f))
-            Image(
-                painter = painterResource(id = R.drawable.ic_arrow_right),
-                contentDescription = "Select Scene"
+            Switch(
+                checked = checkedState.value,
+                onCheckedChange = { checkedState.value = it },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    uncheckedThumbColor = Color.White,
+                    checkedTrackColor = Color(0xFF3FA02F),
+                    uncheckedTrackColor = Color.Gray,
+                    checkedTrackAlpha = 1.0f,
+                    uncheckedTrackAlpha = 1.0f
+                )
             )
         }
+
         Text(
             "Imposta degli orari di accensione e\nspegnimento del dispositivo",
             color = Color.White,
@@ -482,14 +589,27 @@ fun ProgrammingOnOffRow() {
 
 @Composable
 fun OnOffButtonsRow() {
+    val value = ""
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val time = if (value.isNotBlank()) LocalTime.parse(value, formatter) else LocalTime.now()
+    val dialog = TimePickerDialog(
+        LocalContext.current,
+        { _, hour, minute ->
+            //onValueChange(LocalTime.of(hour, minute).toString())
+        },
+        time.hour,
+        time.minute,
+        true,
+    )
+
     Row(
         modifier = Modifier
-            .padding(start = 16.dp, end = 8.dp, top = 16.dp)
+            .padding(start = 16.dp, end = 8.dp, top = 16.dp, bottom = 16.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Center
     ) {
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { dialog.show() },
             modifier = Modifier
                 .width(143.dp)
                 .height(92.dp),
@@ -506,7 +626,7 @@ fun OnOffButtonsRow() {
         }
         Spacer(Modifier.weight(1f))
         Button(
-            onClick = { /*TODO*/ },
+            onClick = { dialog.show() },
             modifier = Modifier
                 .width(143.dp)
                 .height(92.dp),
