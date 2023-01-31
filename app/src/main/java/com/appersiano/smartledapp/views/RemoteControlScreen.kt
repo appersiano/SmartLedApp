@@ -51,12 +51,16 @@ fun RemoteControlScreen(
     ) {
 
         TopColorSelectionRow(showTemperature.value, isLedEnable)
-        AnimatedVisibility(visible = !isLedEnable.value, enter = fadeIn(), exit = fadeOut()) {
+        AnimatedVisibility(
+            visible = !isLedEnable.value,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.zIndex(10f)
+        ) {
             Column(
                 modifier = Modifier
                     .padding(top = 400.dp)
                     .fillMaxHeight()
-                    .zIndex(10f)
             ) {
                 OffStateScreen(
                     modifier = Modifier
@@ -65,7 +69,12 @@ fun RemoteControlScreen(
                 )
             }
         }
-        AnimatedVisibility(visible = isLedEnable.value, enter = fadeIn(), exit = fadeOut()) {
+        AnimatedVisibility(
+            visible = isLedEnable.value,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.zIndex(10f)
+        ) {
             Column(
                 modifier = Modifier
                     .padding(top = 250.dp, start = 16.dp, end = 16.dp)
