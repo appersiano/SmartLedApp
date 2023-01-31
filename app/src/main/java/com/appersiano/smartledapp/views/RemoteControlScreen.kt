@@ -61,6 +61,7 @@ fun RemoteControlScreen(
                 modifier = Modifier
                     .padding(top = 400.dp)
                     .fillMaxHeight()
+                    .clickable {  }
             ) {
                 OffStateScreen(
                     modifier = Modifier
@@ -79,6 +80,7 @@ fun RemoteControlScreen(
                 modifier = Modifier
                     .padding(top = 250.dp, start = 16.dp, end = 16.dp)
                     .zIndex(10f)
+                    .clickable {  }
             ) {
                 Spacer(modifier = Modifier.size(32.dp))
                 ColorOrTemperatureRow(showTemperature)
@@ -189,21 +191,9 @@ fun ColorPickerWheel(
                             bottom
                         )
 
-                        Log.i(
-                            "REGION",
-                            "Region Coordinates: left $left top $top right $right bottom $bottom"
-                        )
-
                         lineLists.forEachIndexed { index, currentPath ->
                             val leftPath = currentPath.getBounds().left.toInt()
                             val topPath = currentPath.getBounds().top.toInt()
-                            val rightPath = currentPath.getBounds().right.toInt()
-                            val bottomPath = currentPath.getBounds().bottom.toInt()
-
-                            Log.i(
-                                "REGION",
-                                "Current Path Coordinates: index ($index) left $leftPath top $topPath right $rightPath bottom $bottomPath"
-                            )
 
                             if (region.contains(
                                     leftPath,
@@ -231,8 +221,6 @@ fun ColorPickerWheel(
         val canvasHeight = size.height
         val radius = 4.dp.toPx()
 
-        Log.i(TAG, "Offset degrees ->" + offsetX.value)
-        Log.i(TAG, "Canvas Size: $canvasWidth X $canvasHeight")
         //translate let show "half" circle outside the screen
         val translateY = -750f
         translate(top = translateY) {
@@ -241,9 +229,7 @@ fun ColorPickerWheel(
                 var hue = 0f//175f
                 //this for effectively create the wheel
                 for (i in 0 until 360 step 3) {
-//                    val i = 0 - offsetX.value
-                    Log.i(TAG, "------------------")
-//                    Log.i("REGION ", "Picker current degrees -> ${i - offsetX.value}")
+
                     rotate(degrees = -i.toFloat()) {
                         val calcColor: Color
                         val currentHueCalculated: Float
@@ -265,7 +251,6 @@ fun ColorPickerWheel(
                             calcColor = Color.White
                         }
 
-                        Log.i("ADDCOLOR", "Add color $calcColor")
                         elementsColor.add(calcColor)
 
                         val startPoint = Offset(
@@ -278,9 +263,6 @@ fun ColorPickerWheel(
                         )
 
                         val matrix = android.graphics.Matrix()
-//                        Log.i("REGION", "---------------------------------")
-//                        Log.i("REGION", "Calculated i degrees -> " + -i.toFloat())
-//                        Log.i("REGION", "Calculated offeser degrees -> " + offsetX.value)
                         matrix.setRotate(-i.toFloat() + offsetX.value, this.center.x, this.center.y)
                         val pts = floatArrayOf(startPoint.x, startPoint.y, endPoint.x, endPoint.y)
                         matrix.mapPoints(pts)
@@ -527,8 +509,8 @@ fun SelectionSceneRow() {
 @Composable
 fun PIRFunctionRow() {
     val checkedState = remember { mutableStateOf(true) }
-    Column(Modifier.padding(16.dp, bottom = 24.dp, top = 24.dp)) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+    Column(Modifier.padding(bottom = 24.dp, top = 24.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(start = 16.dp)) {
             Text(
                 "Affievolisciti allontanandoti",
                 color = Color.White,
@@ -553,7 +535,7 @@ fun PIRFunctionRow() {
             "La luce ridurrà di intensità quando ti\nallontanerai",
             color = Color.White,
             fontSize = 12.sp,
-            modifier = Modifier.padding(top = 4.dp)
+            modifier = Modifier.padding(start = 16.dp, top = 4.dp)
         )
         if (checkedState.value) {
             SeekBarMinBrightness()
