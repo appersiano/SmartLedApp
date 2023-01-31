@@ -3,6 +3,9 @@ package com.appersiano.smartledapp.views
 import android.app.TimePickerDialog
 import android.graphics.Region
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
@@ -48,7 +51,7 @@ fun RemoteControlScreen(
     ) {
 
         TopColorSelectionRow(showTemperature.value, isLedEnable)
-        if (!isLedEnable.value) {
+        AnimatedVisibility(visible = !isLedEnable.value, enter = fadeIn(), exit = fadeOut()) {
             Column(
                 modifier = Modifier
                     .padding(top = 400.dp)
@@ -61,7 +64,8 @@ fun RemoteControlScreen(
                         .fillMaxWidth()
                 )
             }
-        } else {
+        }
+        AnimatedVisibility(visible = isLedEnable.value, enter = fadeIn(), exit = fadeOut()) {
             Column(
                 modifier = Modifier
                     .padding(top = 250.dp, start = 16.dp, end = 16.dp)
@@ -150,12 +154,8 @@ fun ColorPickerWheel(
     lineLists.clear()
     elementsColor.clear()
 
-    if (isLedEnabled.value) {
-        if (showTemperature) {
-            elementsColorTemperature = LEDTemperatureUtils.generateTemperatureArray(120)
-        }
-    } else {
-
+    if (showTemperature) {
+        elementsColorTemperature = LEDTemperatureUtils.generateTemperatureArray(120)
     }
 
     Canvas(
@@ -326,7 +326,7 @@ fun getRandomColor(): Int {
 @Composable
 fun TopColorSelectionRow(showTemperature: Boolean, isLedEnabled: MutableState<Boolean>) {
     val currentSelectedColor = remember { mutableStateOf(Color.Red) }
-    if (isLedEnabled.value){
+    if (isLedEnabled.value) {
         //color from viewmodel
     } else {
         currentSelectedColor.value = Color(0xFF919191)
