@@ -2,7 +2,7 @@ package com.appersiano.smartledapp.views
 
 import android.app.TimePickerDialog
 import android.graphics.Region
-import android.util.Log
+import android.os.Vibrator
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -18,8 +18,10 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -27,10 +29,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.core.content.ContextCompat.getSystemService
 import com.appersiano.smartledapp.R
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
+
 
 @Composable
 fun RemoteControlScreen(
@@ -61,7 +65,7 @@ fun RemoteControlScreen(
                 modifier = Modifier
                     .padding(top = 400.dp)
                     .fillMaxHeight()
-                    .clickable {  }
+                    .clickable { }
             ) {
                 OffStateScreen(
                     modifier = Modifier
@@ -80,7 +84,7 @@ fun RemoteControlScreen(
                 modifier = Modifier
                     .padding(top = 250.dp, start = 16.dp, end = 16.dp)
                     .zIndex(10f)
-                    .clickable {  }
+                    .clickable { }
             ) {
                 Spacer(modifier = Modifier.size(32.dp))
                 ColorOrTemperatureRow(showTemperature)
@@ -152,6 +156,8 @@ fun ColorPickerWheel(
     showTemperature: Boolean = false,
     isLedEnabled: MutableState<Boolean>
 ) {
+    val haptic = LocalHapticFeedback.current
+
     val viewSize = 520.dp
     val widthElement = 6.dp
     val heightElement = 50.dp
@@ -200,6 +206,7 @@ fun ColorPickerWheel(
                                     topPath
                                 )
                             ) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 selectedColor.value = elementsColor.toList()[index]
                                 onSelectedColor.invoke(selectedColor.value)
                                 return@detectDragGestures
@@ -316,6 +323,7 @@ fun getRandomColor(): Int {
 
 @Composable
 fun TopColorSelectionRow(showTemperature: Boolean, isLedEnabled: MutableState<Boolean>) {
+
     val currentSelectedColor = remember { mutableStateOf(Color.Red) }
     if (isLedEnabled.value) {
         //color from viewmodel
@@ -510,7 +518,9 @@ fun SelectionSceneRow() {
 fun PIRFunctionRow() {
     val checkedState = remember { mutableStateOf(true) }
     Column(Modifier.padding(bottom = 24.dp, top = 24.dp)) {
-        Row(modifier = Modifier.fillMaxWidth().padding(start = 16.dp)) {
+        Row(modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp)) {
             Text(
                 "Affievolisciti allontanandoti",
                 color = Color.White,
