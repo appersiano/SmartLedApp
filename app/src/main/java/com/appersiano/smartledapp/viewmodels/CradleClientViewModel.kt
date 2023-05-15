@@ -145,8 +145,12 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun setPIRStatus(minBrightness: Int?, value: Boolean?) {
-        this.pirMinBrightness.value = minBrightness?.toFloat() ?: 127.5f
-        pirStatusBoolean.value = value ?: false
+        minBrightness?.let {
+            this.pirMinBrightness.value = minBrightness?.toFloat() ?: 127.5f
+        }
+        value?.let {
+            pirStatusBoolean.value = value
+        }
         bleClient.setPIRStatus(pirMinBrightness.value.toInt(), CradleLedBleClient.ESwitch.fromInt(pirStatusBoolean.value.toInt()))
     }
 
@@ -157,6 +161,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
 
     fun setLEDBrightnessZeroOneHundred(@IntRange(from = 0L, to = 100L) value: Int) {
         val completeValue = value * 255 / 100
+        brightnessValue.value = completeValue.toFloat()
         bleClient.setLEDBrightness(completeValue.toLong())
     }
     fun setLEDBrightness(@IntRange(from = 0L, to = 255L) value: Long) {

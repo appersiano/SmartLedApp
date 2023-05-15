@@ -2,6 +2,7 @@ package com.appersiano.smartledapp.views
 
 import android.app.TimePickerDialog
 import android.graphics.Region
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -32,6 +33,7 @@ import com.appersiano.smartledapp.client.CradleLedBleClient
 import com.appersiano.smartledapp.viewmodels.CradleClientViewModel
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.roundToInt
 import kotlin.random.Random
 
 
@@ -49,8 +51,9 @@ fun RemoteControlScreen(
     val showTemperature = remember { mutableStateOf(false) }
     Box(
         Modifier
-            .verticalScroll(scrollState)
             .fillMaxHeight()
+            .verticalScroll(scrollState)
+
     ) {
 
         TopColorSelectionRow(showTemperature.value, isLedEnable.value,
@@ -94,7 +97,9 @@ fun RemoteControlScreen(
                 Spacer(modifier = Modifier.size(32.dp))
                 ColorOrTemperatureRow(showTemperature)
                 Spacer(modifier = Modifier.size(16.dp))
-                SeekBarBrightness(viewModel.brightnessValue.value.normalizeFrom255().toInt()) {
+                SeekBarBrightness(
+                    value = viewModel.brightnessValue.value.normalizeFrom255().toInt()
+                ) {
                     viewModel.setLEDBrightnessZeroOneHundred(it)
                 }
                 //SelectionSceneRow()
@@ -451,13 +456,12 @@ fun ColorOrTemperatureRow(showTemperature: MutableState<Boolean>) {
 }
 
 @Composable
-fun SeekBarBrightness(value : Int, block: (Int) -> Unit) {
-    var brightness by remember { mutableStateOf(value) }
+fun SeekBarBrightness(value: Int, block: (Int) -> Unit) {
+    Log.i(TAG, "SeekBarBrightness: value -> " + value)
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            //.padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
-                ,
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -466,11 +470,10 @@ fun SeekBarBrightness(value : Int, block: (Int) -> Unit) {
         )
         Spacer(modifier = Modifier.size(16.dp))
         Slider(
-            modifier = Modifier.weight(1f).background(Color.Red),
-            value = brightness.toFloat(),
+            modifier = Modifier.weight(1f),
+            value = value.toFloat(),
             onValueChange = {
-                brightness = it.toInt()
-                block.invoke(brightness)
+                block.invoke(it.roundToInt())
             },
             valueRange = 0f..100f,
             onValueChangeFinished = {
@@ -482,13 +485,13 @@ fun SeekBarBrightness(value : Int, block: (Int) -> Unit) {
             )
         )
         Spacer(modifier = Modifier.size(16.dp))
-        Text(text = "${brightness}%", color = Color.White)
+        Text(text = "${value}%", color = Color.White)
     }
 }
 
 @Composable
 fun SeekBarMinBrightness(minBrightness: Int, onMinBrightness: (Int) -> Unit) {
-    var brightness = minBrightness
+    val brightness = remember { mutableStateOf(minBrightness) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -502,12 +505,12 @@ fun SeekBarMinBrightness(minBrightness: Int, onMinBrightness: (Int) -> Unit) {
         Spacer(modifier = Modifier.size(16.dp))
         Slider(
             modifier = Modifier.weight(1f),
-            value = brightness.toFloat(),
-            onValueChange = { brightness = it.toInt() },
+            value = brightness.value.toFloat(),
+            onValueChange = { brightness.value = it.roundToInt() },
             valueRange = 0f..100f,
             onValueChangeFinished = {
                 // launch some business logic update with the state you hold
-                onMinBrightness.invoke(brightness)
+                onMinBrightness.invoke(brightness.value)
             },
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
@@ -515,7 +518,7 @@ fun SeekBarMinBrightness(minBrightness: Int, onMinBrightness: (Int) -> Unit) {
             )
         )
         Spacer(modifier = Modifier.size(16.dp))
-        Text(text = "${brightness}%", color = Color.White)
+        Text(text = "${brightness.value}%", color = Color.White)
     }
 }
 
@@ -540,7 +543,12 @@ fun SelectionSceneRow() {
 }
 
 @Composable
-fun PIRFunctionRow(pirStatus : Boolean, minBrightness : Int,  onCheckedChange: (Boolean) -> Unit, onMinBrightness: (Int) -> Unit) {
+fun PIRFunctionRow(
+    pirStatus: Boolean,
+    minBrightness: Int,
+    onCheckedChange: (Boolean) -> Unit,
+    onMinBrightness: (Int) -> Unit
+) {
     val checkedState = pirStatus
     Column(Modifier.padding(bottom = 24.dp, top = 24.dp)) {
         Row(
