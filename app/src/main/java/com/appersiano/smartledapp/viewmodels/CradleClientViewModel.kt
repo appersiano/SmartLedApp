@@ -3,7 +3,12 @@ package com.appersiano.smartledapp.viewmodels
 import android.app.Application
 import android.graphics.Color
 import android.util.Log
+import androidx.annotation.IntRange
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.blue
+import androidx.core.graphics.green
+import androidx.core.graphics.red
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.appersiano.smartledapp.client.CradleLedBleClient
@@ -20,7 +25,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
 
     //region MutableStateFlow
     val bleDeviceStatus = bleClient.deviceConnectionStatus
-    val ledStatusBoolean = bleClient.ledStatus.map { it.toBool() }
+    val ledStatusBoolean = mutableStateOf(false)
     val pirStatusBoolean = mutableStateOf(false)
     val pirMinBrightness = mutableStateOf(0f)
     val rgbValue = mutableStateOf(0)
@@ -66,6 +71,11 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
             }
         }
 
+        viewModelScope.launch {
+            bleClient.ledStatus.map {
+                ledStatusBoolean.value = it.toBool()
+            }
+        }
         initCurrentTime()
     }
 
@@ -105,7 +115,12 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         bleClient.setLEDColor(red, green, blue)
     }
 
-    fun setLEDBrightness(value: Long) {
+    fun setLEDBrightnessZeroOneHundred(@IntRange(from = 0L, to = 100L) value: Int) {
+        brightnessValue.value = value.toFloat()
+        val completeValue = value * 255 / 100
+        bleClient.setLEDBrightness(completeValue.toLong())
+    }
+    fun setLEDBrightness(@IntRange(from = 0L, to = 255L) value: Long) {
         brightnessValue.value = value.toFloat()
         bleClient.setLEDBrightness(value)
     }
@@ -175,5 +190,14 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     override fun onCleared() {
         super.onCleared()
         Log.i(TAG, "onCleared: ")
+    }
+
+    fun toggleLedEnable(value: Boolean) {
+        ledStatusBoolean.value = value
+        setLEDStatus(value)
+    }
+
+    fun selectColor(it: androidx.compose.ui.graphics.Color) {
+        setLEDColor(it.toArgb().red, it.toArgb().green, it.toArgb().blue)
     }
 }

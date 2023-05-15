@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            SmartLedAppTheme {
+            SmartLedAppTheme(darkTheme = true) {
                 Surface(
                     color = MaterialTheme.colors.background
                 ) {
@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(
                         navController = navController,
-                        startDestination = "test",
+                        startDestination = "main",
                     ) {
                         composable(route = "main") {
                             MainScreen(
@@ -56,18 +56,18 @@ class MainActivity : ComponentActivity() {
                             val macAddress = backStackEntry.arguments?.getString("macAddress")
                             macAddress?.let {
                                 val bleClient: CradleClientViewModel = viewModel()
-                                DetailScreen(
+                                bleClient.connect(macAddress)
+                                scannerViewModel.stopScan()
+
+                                RemoteControlScreen(
                                     macAddress = macAddress,
-                                    onConnect = {
-                                        bleClient.connect(macAddress)
-                                        scannerViewModel.stopScan()
-                                    },
                                     onDisconnect = {
                                         bleClient.disconnect()
                                     },
                                     status = bleClient.bleDeviceStatus.collectAsState().value,
                                     viewModel = bleClient
                                 )
+
                             }
                         }
 
@@ -76,7 +76,6 @@ class MainActivity : ComponentActivity() {
                                 color = Color(0xFF1E1E1E),
                                 modifier = Modifier.fillMaxHeight()
                             ) {
-                                RemoteControlScreen()
                             }
                         }
                     }

@@ -31,6 +31,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat.getSystemService
 import com.appersiano.smartledapp.R
+import com.appersiano.smartledapp.client.CradleLedBleClient
+import com.appersiano.smartledapp.viewmodels.CradleClientViewModel
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.random.Random
@@ -38,15 +40,15 @@ import kotlin.random.Random
 
 @Composable
 fun RemoteControlScreen(
-//    viewModel: CradleClientViewModel,
-//    macAddress: String,
-//    onConnect: () -> Unit = {},
-//    onDisconnect: () -> Unit = {},
-//    status: CradleLedBleClient.SDeviceStatus,
+    viewModel: CradleClientViewModel,
+    macAddress: String,
+    onConnect: () -> Unit = {},
+    onDisconnect: () -> Unit = {},
+    status: CradleLedBleClient.SDeviceStatus,
 ) {
     val scrollState = rememberScrollState()
 
-    val isLedEnable = remember { mutableStateOf(false) }
+    val isLedEnable = remember { viewModel.ledStatusBoolean }
     val showTemperature = remember { mutableStateOf(false) }
     Box(
         Modifier
@@ -54,7 +56,13 @@ fun RemoteControlScreen(
             .fillMaxHeight()
     ) {
 
-        TopColorSelectionRow(showTemperature.value, isLedEnable)
+        TopColorSelectionRow(showTemperature.value, isLedEnable.value,
+            toggle = { toogleLedEnable ->
+                viewModel.toggleLedEnable(toogleLedEnable)
+            }, selectedRGBColor = {
+                viewModel.selectColor(it)
+            })
+
         AnimatedVisibility(
             visible = !isLedEnable.value,
             enter = fadeIn(),
@@ -88,7 +96,9 @@ fun RemoteControlScreen(
             ) {
                 Spacer(modifier = Modifier.size(32.dp))
                 ColorOrTemperatureRow(showTemperature)
-                SeekBarBrightness()
+                SeekBarBrightness() {
+                    viewModel.setLEDBrightnessZeroOneHundred(it)
+                }
                 //SelectionSceneRow()
                 Divider(thickness = 1.dp, color = Color.Gray)
                 PIRFunctionRow()
@@ -154,7 +164,7 @@ fun ColorPickerWheel(
     onSelectedColor: (Color) -> Unit,
     onDragEnd: (Color) -> Unit,
     showTemperature: Boolean = false,
-    isLedEnabled: MutableState<Boolean>
+    isLedEnabled: Boolean
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -178,9 +188,9 @@ fun ColorPickerWheel(
     Canvas(
         modifier = Modifier
             .size(viewSize)
-            .pointerInput(Unit) {
+            .pointerInput(isLedEnabled) {
                 detectDragGestures(onDrag = { change, dragAmount ->
-                    if (isLedEnabled.value) {
+                    if (isLedEnabled) {
                         change.consume()
                         offsetX.value -= (dragAmount.x / 10)
 
@@ -240,7 +250,7 @@ fun ColorPickerWheel(
                     rotate(degrees = -i.toFloat()) {
                         val calcColor: Color
                         val currentHueCalculated: Float
-                        if (isLedEnabled.value) {
+                        if (isLedEnabled) {
                             if (showTemperature) {
                                 calcColor = elementsColorTemperature[i / 3]
                             } else {
@@ -280,7 +290,7 @@ fun ColorPickerWheel(
                         }
                         lineLists.add(path)
 
-                        if (isLedEnabled.value) {
+                        if (isLedEnabled) {
                             drawLine(
                                 color = calcColor,
                                 start = startPoint,
@@ -301,7 +311,7 @@ fun ColorPickerWheel(
             }
 
             //Small White Dot over the selected color
-            if (isLedEnabled.value) {
+            if (isLedEnabled) {
                 drawCircle(
                     color = Color.White,
                     center = Offset(
@@ -322,10 +332,14 @@ fun getRandomColor(): Int {
 
 
 @Composable
-fun TopColorSelectionRow(showTemperature: Boolean, isLedEnabled: MutableState<Boolean>) {
+fun TopColorSelectionRow(
+    showTemperature: Boolean, isLedEnabled: Boolean,
+    toggle: (Boolean) -> Unit,
+    selectedRGBColor: (Color) -> Unit
+) {
 
     val currentSelectedColor = remember { mutableStateOf(Color.Red) }
-    if (isLedEnabled.value) {
+    if (isLedEnabled) {
         //color from viewmodel
     } else {
         currentSelectedColor.value = Color(0xFF919191)
@@ -339,8 +353,9 @@ fun TopColorSelectionRow(showTemperature: Boolean, isLedEnabled: MutableState<Bo
         ColorPickerWheel(
             onSelectedColor = {
                 currentSelectedColor.value = it
+                selectedRGBColor.invoke(it)
             }, onDragEnd = {
-                //viewodel.setColor(it)
+                //selectedRGBColor.invoke(it)
             },
             showTemperature,
             isLedEnabled
@@ -359,9 +374,9 @@ fun TopColorSelectionRow(showTemperature: Boolean, isLedEnabled: MutableState<Bo
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             IconToggleButton(
-                checked = isLedEnabled.value,
+                checked = isLedEnabled,
                 onCheckedChange = {
-                    isLedEnabled.value = it
+                    toggle.invoke(it)
                 }) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_on_off_icon),
@@ -431,7 +446,7 @@ fun ColorOrTemperatureRow(showTemperature: MutableState<Boolean>) {
 }
 
 @Composable
-fun SeekBarBrightness() {
+fun SeekBarBrightness(block: (Int) -> Unit) {
     var brightness by remember { mutableStateOf(50) }
     Row(
         modifier = Modifier
@@ -447,10 +462,13 @@ fun SeekBarBrightness() {
         Slider(
             modifier = Modifier.weight(1f),
             value = brightness.toFloat(),
-            onValueChange = { brightness = it.toInt() },
+            onValueChange = {
+                brightness = it.toInt()
+                block.invoke(brightness)
+            },
             valueRange = 0f..100f,
             onValueChangeFinished = {
-                // launch some business logic update with the state you hold
+                //nothing
             },
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
@@ -518,9 +536,11 @@ fun SelectionSceneRow() {
 fun PIRFunctionRow() {
     val checkedState = remember { mutableStateOf(true) }
     Column(Modifier.padding(bottom = 24.dp, top = 24.dp)) {
-        Row(modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp)
+        ) {
             Text(
                 "Affievolisciti allontanandoti",
                 color = Color.White,
@@ -642,10 +662,4 @@ fun OnOffButtonsRow() {
             }
         }
     }
-}
-
-@Preview(showSystemUi = true)
-@Composable
-fun Preview() {
-    RemoteControlScreen()
 }

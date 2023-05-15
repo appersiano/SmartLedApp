@@ -165,7 +165,7 @@ private fun SetPiRStatusRow(viewModel: CradleClientViewModel) {
 @Composable
 private fun SetLEDStatusRow(viewModel: CradleClientViewModel) {
     Row(Modifier.height(IntrinsicSize.Min)) {
-        val checkedLed = viewModel.ledStatusBoolean.collectAsState(initial = false)
+        val checkedLed = remember { viewModel.ledStatusBoolean }
         SetLEDStatusCommands(viewModel)
         Divider(
             modifier = Modifier
