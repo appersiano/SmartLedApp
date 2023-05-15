@@ -2,7 +2,6 @@ package com.appersiano.smartledapp.views
 
 import android.app.TimePickerDialog
 import android.graphics.Region
-import android.os.Vibrator
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,11 +24,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat.getSystemService
 import com.appersiano.smartledapp.R
 import com.appersiano.smartledapp.client.CradleLedBleClient
 import com.appersiano.smartledapp.viewmodels.CradleClientViewModel
@@ -96,12 +93,20 @@ fun RemoteControlScreen(
             ) {
                 Spacer(modifier = Modifier.size(32.dp))
                 ColorOrTemperatureRow(showTemperature)
-                SeekBarBrightness() {
+                Spacer(modifier = Modifier.size(16.dp))
+                SeekBarBrightness(viewModel.brightnessValue.value.normalizeFrom255().toInt()) {
                     viewModel.setLEDBrightnessZeroOneHundred(it)
                 }
                 //SelectionSceneRow()
                 Divider(thickness = 1.dp, color = Color.Gray)
-                PIRFunctionRow()
+                PIRFunctionRow(
+                    pirStatus = viewModel.pirStatusBoolean.value,
+                    minBrightness = viewModel.pirMinBrightness.value.normalizeFrom255().toInt(),
+                    onCheckedChange = {
+                        viewModel.setPIRStatus(null, it)
+                    }, onMinBrightness = {
+                        viewModel.setPIRStatus(it, null)
+                    })
                 Divider(thickness = 1.dp, color = Color.Gray)
                 ProgrammingOnOffRow()
                 OnOffButtonsRow()
@@ -446,12 +451,13 @@ fun ColorOrTemperatureRow(showTemperature: MutableState<Boolean>) {
 }
 
 @Composable
-fun SeekBarBrightness(block: (Int) -> Unit) {
-    var brightness by remember { mutableStateOf(50) }
+fun SeekBarBrightness(value : Int, block: (Int) -> Unit) {
+    var brightness by remember { mutableStateOf(value) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+            //.padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+                ,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Image(
@@ -460,7 +466,7 @@ fun SeekBarBrightness(block: (Int) -> Unit) {
         )
         Spacer(modifier = Modifier.size(16.dp))
         Slider(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).background(Color.Red),
             value = brightness.toFloat(),
             onValueChange = {
                 brightness = it.toInt()
@@ -481,8 +487,8 @@ fun SeekBarBrightness(block: (Int) -> Unit) {
 }
 
 @Composable
-fun SeekBarMinBrightness() {
-    var brightness by remember { mutableStateOf(50) }
+fun SeekBarMinBrightness(minBrightness: Int, onMinBrightness: (Int) -> Unit) {
+    var brightness = minBrightness
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -501,6 +507,7 @@ fun SeekBarMinBrightness() {
             valueRange = 0f..100f,
             onValueChangeFinished = {
                 // launch some business logic update with the state you hold
+                onMinBrightness.invoke(brightness)
             },
             colors = SliderDefaults.colors(
                 thumbColor = Color.White,
@@ -533,8 +540,8 @@ fun SelectionSceneRow() {
 }
 
 @Composable
-fun PIRFunctionRow() {
-    val checkedState = remember { mutableStateOf(true) }
+fun PIRFunctionRow(pirStatus : Boolean, minBrightness : Int,  onCheckedChange: (Boolean) -> Unit, onMinBrightness: (Int) -> Unit) {
+    val checkedState = pirStatus
     Column(Modifier.padding(bottom = 24.dp, top = 24.dp)) {
         Row(
             modifier = Modifier
@@ -549,8 +556,10 @@ fun PIRFunctionRow() {
             )
             Spacer(Modifier.weight(1f))
             Switch(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it },
+                checked = checkedState,
+                onCheckedChange = {
+                    onCheckedChange.invoke(it)
+                },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     uncheckedThumbColor = Color.White,
@@ -567,8 +576,8 @@ fun PIRFunctionRow() {
             fontSize = 12.sp,
             modifier = Modifier.padding(start = 16.dp, top = 4.dp)
         )
-        if (checkedState.value) {
-            SeekBarMinBrightness()
+        if (checkedState) {
+            SeekBarMinBrightness(minBrightness, onMinBrightness)
         }
     }
 }

@@ -101,7 +101,8 @@ fun DevicePickerItem(navController: NavController, macAddress: String, rssi: Int
         ClickableText(
             text = AnnotatedString("MacAddress: $macAddress"),
             style = TextStyle(
-                fontSize = 20.sp
+                fontSize = 20.sp,
+                color = Color.White
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -121,6 +122,7 @@ fun ScanStatusText(scanStatus: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
+        color = Color.White
     )
 }
 

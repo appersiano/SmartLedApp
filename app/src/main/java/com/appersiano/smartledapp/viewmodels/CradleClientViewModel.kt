@@ -13,6 +13,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.appersiano.smartledapp.client.CradleLedBleClient
 import com.appersiano.smartledapp.toInt
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.util.*
@@ -49,6 +50,26 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
             }
         }
         viewModelScope.launch {
+            bleClient.ledStatus.collect {
+                when(it){
+                    CradleLedBleClient.ESwitch.OFF -> {
+                        ledStatusBoolean.value = false
+                    }
+                    CradleLedBleClient.ESwitch.ON -> {
+                        ledStatusBoolean.value = true
+                    }
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            bleClient.pirStatus.collect {
+                pirStatusBoolean.value = it.switch.toBool()
+                pirMinBrightness.value = it.minBrightness.toFloat()
+            }
+        }
+
+        viewModelScope.launch {
             bleClient.brightness.collect {
                 brightnessValue.value = it.toFloat()
             }
@@ -65,17 +86,36 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         }
 
         viewModelScope.launch {
-            bleClient.pirStatus.collect {
-                pirStatusBoolean.value = it.switch.toBool()
-                pirMinBrightness.value = it.minBrightness.toFloat()
-            }
-        }
-
-        viewModelScope.launch {
             bleClient.ledStatus.map {
                 ledStatusBoolean.value = it.toBool()
             }
         }
+
+        viewModelScope.launch {
+            bleClient.deviceConnectionStatus.collect {
+                when(it){
+                    CradleLedBleClient.SDeviceStatus.CONNECTED -> {
+
+                    }
+                    CradleLedBleClient.SDeviceStatus.DISCONNECTED -> {
+
+                    }
+                    CradleLedBleClient.SDeviceStatus.READY -> {
+                        bleClient.readLEDStatus()
+                        delay(500)
+                        bleClient.readPIRStatus()
+                        delay(500)
+                        bleClient.readLEDBrightness()
+                        initCurrentTime()
+                    }
+                    CradleLedBleClient.SDeviceStatus.UNKNOWN -> {
+
+                    }
+                }
+
+            }
+        }
+
         initCurrentTime()
     }
 
@@ -104,10 +144,10 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         bleClient.setLEDStatus(CradleLedBleClient.ESwitch.fromInt(value.toInt()))
     }
 
-    fun setPIRStatus(minBrightness: Int, value: Boolean) {
-        this.pirMinBrightness.value = minBrightness.toFloat()
-        pirStatusBoolean.value = value
-        bleClient.setPIRStatus(minBrightness, CradleLedBleClient.ESwitch.fromInt(value.toInt()))
+    fun setPIRStatus(minBrightness: Int?, value: Boolean?) {
+        this.pirMinBrightness.value = minBrightness?.toFloat() ?: 127.5f
+        pirStatusBoolean.value = value ?: false
+        bleClient.setPIRStatus(pirMinBrightness.value.toInt(), CradleLedBleClient.ESwitch.fromInt(pirStatusBoolean.value.toInt()))
     }
 
     fun setLEDColor(red: Int, green: Int, blue: Int) {
@@ -116,7 +156,6 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun setLEDBrightnessZeroOneHundred(@IntRange(from = 0L, to = 100L) value: Int) {
-        brightnessValue.value = value.toFloat()
         val completeValue = value * 255 / 100
         bleClient.setLEDBrightness(completeValue.toLong())
     }

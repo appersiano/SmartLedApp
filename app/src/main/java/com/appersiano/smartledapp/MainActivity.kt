@@ -56,18 +56,33 @@ class MainActivity : ComponentActivity() {
                             val macAddress = backStackEntry.arguments?.getString("macAddress")
                             macAddress?.let {
                                 val bleClient: CradleClientViewModel = viewModel()
-                                bleClient.connect(macAddress)
-                                scannerViewModel.stopScan()
 
-                                RemoteControlScreen(
-                                    macAddress = macAddress,
-                                    onDisconnect = {
-                                        bleClient.disconnect()
-                                    },
-                                    status = bleClient.bleDeviceStatus.collectAsState().value,
-                                    viewModel = bleClient
-                                )
-
+                                val debug = false
+                                if (debug) {
+                                    DetailScreen(
+                                        macAddress = macAddress,
+                                        onConnect = {
+                                            bleClient.connect(macAddress)
+                                            scannerViewModel.stopScan()
+                                        },
+                                        onDisconnect = {
+                                            bleClient.disconnect()
+                                        },
+                                        status = bleClient.bleDeviceStatus.collectAsState().value,
+                                        viewModel = bleClient
+                                    )
+                                } else {
+                                    bleClient.connect(macAddress)
+                                    scannerViewModel.stopScan()
+                                    RemoteControlScreen(
+                                        macAddress = macAddress,
+                                        onDisconnect = {
+                                            bleClient.disconnect()
+                                        },
+                                        status = bleClient.bleDeviceStatus.collectAsState().value,
+                                        viewModel = bleClient
+                                    )
+                                }
                             }
                         }
 

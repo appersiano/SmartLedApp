@@ -78,3 +78,7 @@ object LEDTemperatureUtils {
     }
 
 }
+
+fun Float.normalizeFrom255() : Float{
+    return this * 100 / 255
+}
