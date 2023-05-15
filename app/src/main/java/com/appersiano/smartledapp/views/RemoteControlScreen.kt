@@ -113,8 +113,23 @@ fun RemoteControlScreen(
                         viewModel.setPIRStatus(it, null)
                     })
                 Divider(thickness = 1.dp, color = Color.Gray)
-                ProgrammingOnOffRow()
-                OnOffButtonsRow()
+                ProgrammingOnOffRow(
+                    onChecked = { checked ->
+                        viewModel.setTimerFeature(
+                            value = checked
+                        )
+                    }, checkedState = viewModel.timerFeatureValue.value.timeFeatureStatus.toBool()
+                )
+                OnOffButtonsRow(
+                    switchOnHour = viewModel.timerFeatureValue.value.switchOnHour,
+                    switchOnMinute = viewModel.timerFeatureValue.value.switchOnMinute,
+                    switchOffHour = viewModel.timerFeatureValue.value.switchOffHour,
+                    switchOffMinute = viewModel.timerFeatureValue.value.switchOffMinute,
+                    onTimeStart = {
+                        viewModel.setTimerFeature(hourON = it.hour, minuteON = it.minute)
+                    }, onTimeEnd = {
+                        viewModel.setTimerFeature(hourOFF = it.hour, minuteOFF = it.minute)
+                    })
             }
         }
     }
@@ -591,8 +606,7 @@ fun PIRFunctionRow(
 }
 
 @Composable
-fun ProgrammingOnOffRow() {
-    val checkedState = remember { mutableStateOf(true) }
+fun ProgrammingOnOffRow(checkedState: Boolean, onChecked: (Boolean) -> Unit) {
     Column(Modifier.padding(16.dp, bottom = 24.dp, top = 24.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
             Text(
@@ -603,8 +617,10 @@ fun ProgrammingOnOffRow() {
             )
             Spacer(Modifier.weight(1f))
             Switch(
-                checked = checkedState.value,
-                onCheckedChange = { checkedState.value = it },
+                checked = checkedState,
+                onCheckedChange = {
+                    onChecked.invoke(it)
+                },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     uncheckedThumbColor = Color.White,
@@ -626,14 +642,31 @@ fun ProgrammingOnOffRow() {
 }
 
 @Composable
-fun OnOffButtonsRow() {
+fun OnOffButtonsRow(
+    onTimeStart: (LocalTime) -> Unit,
+    onTimeEnd: (LocalTime) -> Unit,
+    switchOnHour: Int,
+    switchOffHour: Int,
+    switchOffMinute: Int,
+    switchOnMinute: Int
+) {
     val value = ""
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val time = if (value.isNotBlank()) LocalTime.parse(value, formatter) else LocalTime.now()
-    val dialog = TimePickerDialog(
+    val dialogStart = TimePickerDialog(
         LocalContext.current,
         { _, hour, minute ->
-            //onValueChange(LocalTime.of(hour, minute).toString())
+            onTimeStart(LocalTime.of(hour, minute))
+        },
+        time.hour,
+        time.minute,
+        true,
+    )
+
+    val dialogEnd = TimePickerDialog(
+        LocalContext.current,
+        { _, hour, minute ->
+            onTimeEnd(LocalTime.of(hour, minute))
         },
         time.hour,
         time.minute,
@@ -647,7 +680,7 @@ fun OnOffButtonsRow() {
         horizontalArrangement = Arrangement.Center
     ) {
         Button(
-            onClick = { dialog.show() },
+            onClick = { dialogStart.show() },
             modifier = Modifier
                 .width(143.dp)
                 .height(92.dp),
@@ -658,13 +691,18 @@ fun OnOffButtonsRow() {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Accensione")
-                Text("06:00")
+                Text(
+                    String.format("%02d", switchOnMinute) + ":" + String.format(
+                        "%02d",
+                        switchOnMinute
+                    )
+                )
             }
 
         }
         Spacer(Modifier.weight(1f))
         Button(
-            onClick = { dialog.show() },
+            onClick = { dialogEnd.show() },
             modifier = Modifier
                 .width(143.dp)
                 .height(92.dp),
@@ -675,7 +713,12 @@ fun OnOffButtonsRow() {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Spegnimento")
-                Text("06:00")
+                Text(
+                    String.format("%02d", switchOffHour) + ":" + String.format(
+                        "%02d",
+                        switchOffMinute
+                    )
+                )
             }
         }
     }

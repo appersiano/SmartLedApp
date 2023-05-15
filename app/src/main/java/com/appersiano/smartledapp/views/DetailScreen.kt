@@ -623,7 +623,7 @@ fun SetTimerFeature(viewModel: CradleClientViewModel) {
     }
     Button(onClick = {
         viewModel.setTimerFeature(
-            timerFeature.timeFeatureStatus,
+            timerFeature.timeFeatureStatus.toBool(),
             timerFeature.switchOnHour,
             timerFeature.switchOnMinute,
             timerFeature.switchOffHour,

@@ -51,10 +51,11 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         }
         viewModelScope.launch {
             bleClient.ledStatus.collect {
-                when(it){
+                when (it) {
                     CradleLedBleClient.ESwitch.OFF -> {
                         ledStatusBoolean.value = false
                     }
+
                     CradleLedBleClient.ESwitch.ON -> {
                         ledStatusBoolean.value = true
                     }
@@ -93,21 +94,28 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
 
         viewModelScope.launch {
             bleClient.deviceConnectionStatus.collect {
-                when(it){
+                when (it) {
                     CradleLedBleClient.SDeviceStatus.CONNECTED -> {
 
                     }
+
                     CradleLedBleClient.SDeviceStatus.DISCONNECTED -> {
 
                     }
+
                     CradleLedBleClient.SDeviceStatus.READY -> {
                         bleClient.readLEDStatus()
                         delay(500)
                         bleClient.readPIRStatus()
                         delay(500)
                         bleClient.readLEDBrightness()
+                        delay(500)
+                        bleClient.readTimerFeature()
+                        delay(500)
+                        bleClient.readLEDColor()
                         initCurrentTime()
                     }
+
                     CradleLedBleClient.SDeviceStatus.UNKNOWN -> {
 
                     }
@@ -151,7 +159,10 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         value?.let {
             pirStatusBoolean.value = value
         }
-        bleClient.setPIRStatus(pirMinBrightness.value.toInt(), CradleLedBleClient.ESwitch.fromInt(pirStatusBoolean.value.toInt()))
+        bleClient.setPIRStatus(
+            pirMinBrightness.value.toInt(),
+            CradleLedBleClient.ESwitch.fromInt(pirStatusBoolean.value.toInt())
+        )
     }
 
     fun setLEDColor(red: Int, green: Int, blue: Int) {
@@ -164,6 +175,7 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
         brightnessValue.value = completeValue.toFloat()
         bleClient.setLEDBrightness(completeValue.toLong())
     }
+
     fun setLEDBrightness(@IntRange(from = 0L, to = 255L) value: Long) {
         brightnessValue.value = value.toFloat()
         bleClient.setLEDBrightness(value)
@@ -184,26 +196,41 @@ class CradleClientViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun setTimerFeature(
-        value: CradleLedBleClient.ESwitch,
-        hourON: Int,
-        minuteON: Int,
-        hourOFF: Int,
-        minuteOFF: Int
+        value: Boolean? = null,
+        hourON: Int? = null,
+        minuteON: Int? = null,
+        hourOFF: Int? = null,
+        minuteOFF: Int? = null
     ) {
-        timerFeatureValue.value = CradleLedBleClient.FeatureTimerDTO(
-            value,
-            hourON,
-            minuteON,
-            hourOFF,
-            minuteOFF
-        )
+        value?.let {
+            timerFeatureValue.value = timerFeatureValue.value.copy(
+                timeFeatureStatus =
+                if (value) CradleLedBleClient.ESwitch.ON else CradleLedBleClient.ESwitch.OFF
+            )
+        }
+
+        hourON?.let {
+            timerFeatureValue.value = timerFeatureValue.value.copy( switchOnHour = it)
+        }
+
+        hourOFF?.let {
+            timerFeatureValue.value = timerFeatureValue.value.copy( switchOffHour = it)
+        }
+
+        minuteON?.let {
+            timerFeatureValue.value = timerFeatureValue.value.copy( switchOnMinute = it)
+        }
+
+        minuteOFF?.let {
+            timerFeatureValue.value = timerFeatureValue.value.copy( switchOffMinute = it)
+        }
 
         bleClient.setTimerFeature(
-            value,
-            hourON,
-            minuteON,
-            hourOFF,
-            minuteOFF
+            timerFeatureValue.value.timeFeatureStatus,
+            timerFeatureValue.value.switchOnHour,
+            timerFeatureValue.value.switchOnMinute,
+            timerFeatureValue.value.switchOffHour,
+            timerFeatureValue.value.switchOffMinute,
         )
     }
 
