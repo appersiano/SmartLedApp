@@ -3,12 +3,12 @@ package com.appersiano.smartledapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,12 +28,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             SmartLedAppTheme(darkTheme = true) {
                 Surface(
-                    color = MaterialTheme.colors.background
+                    color = MaterialTheme.colors.background,
                 ) {
                     val scannerViewModel: ScannerViewModel = viewModel()
 
                     val scanStatus = scannerViewModel.scanStatus.collectAsState()
                     val navController = rememberNavController()
+                    var viewModeDebug = remember { mutableStateOf(false) }
                     NavHost(
                         navController = navController,
                         startDestination = "main",
@@ -48,7 +49,11 @@ class MainActivity : ComponentActivity() {
                                     scannerViewModel.stopScan()
                                 },
                                 scanStatus,
-                                scannerViewModel.listDevices
+                                scannerViewModel.listDevices,
+                                checkDebugValue = viewModeDebug.value,
+                                checkDebug = {
+                                    viewModeDebug.value = it
+                                }
                             )
                         }
 
@@ -57,8 +62,7 @@ class MainActivity : ComponentActivity() {
                             macAddress?.let {
                                 val bleClient: CradleClientViewModel = viewModel()
 
-                                val debug = false
-                                if (debug) {
+                                if (viewModeDebug.value) {
                                     DetailScreen(
                                         macAddress = macAddress,
                                         onConnect = {
@@ -80,7 +84,8 @@ class MainActivity : ComponentActivity() {
                                             bleClient.disconnect()
                                         },
                                         status = bleClient.bleDeviceStatus.collectAsState().value,
-                                        viewModel = bleClient
+                                        viewModel = bleClient,
+                                        navController = navController
                                     )
                                 }
                             }

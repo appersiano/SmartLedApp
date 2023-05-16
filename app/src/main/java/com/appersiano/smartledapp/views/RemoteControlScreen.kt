@@ -3,6 +3,7 @@ package com.appersiano.smartledapp.views
 import android.app.TimePickerDialog
 import android.graphics.Region
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.navigation.NavHostController
 import com.appersiano.smartledapp.R
 import com.appersiano.smartledapp.client.CradleLedBleClient
 import com.appersiano.smartledapp.viewmodels.CradleClientViewModel
@@ -44,6 +46,7 @@ fun RemoteControlScreen(
     onConnect: () -> Unit = {},
     onDisconnect: () -> Unit = {},
     status: CradleLedBleClient.SDeviceStatus,
+    navController: NavHostController,
 ) {
     val scrollState = rememberScrollState()
 
@@ -56,7 +59,7 @@ fun RemoteControlScreen(
 
     ) {
 
-        TopColorSelectionRow(showTemperature.value, isLedEnable.value,
+        TopColorSelectionRow(Color.Red, showTemperature.value, isLedEnable.value,
             toggle = { toogleLedEnable ->
                 viewModel.toggleLedEnable(toogleLedEnable)
             }, selectedRGBColor = {
@@ -133,6 +136,11 @@ fun RemoteControlScreen(
             }
         }
     }
+
+    BackHandler {
+        viewModel.disconnect()
+        navController.popBackStack()
+    }
 }
 
 @Composable
@@ -163,7 +171,10 @@ private fun OffStateScreen(modifier: Modifier) {
 }
 
 @Composable
-private fun HalfArcGradient(modifier: Modifier, currentSelectedColor: MutableState<Color>) {
+private fun HalfArcGradient(
+    modifier: Modifier,
+    currentSelectedColor: MutableState<Color>
+) {
     Canvas(
         modifier = modifier
     ) {
@@ -186,6 +197,7 @@ private const val TAG = "RemoteControlScreen"
 
 @Composable
 fun ColorPickerWheel(
+    initSelectColor: Color,
     onSelectedColor: (Color) -> Unit,
     onDragEnd: (Color) -> Unit,
     showTemperature: Boolean = false,
@@ -201,7 +213,7 @@ fun ColorPickerWheel(
     val lineLists = remember { mutableListOf<Path>() }
     val elementsColor = remember { mutableListOf<Color>() }
     var elementsColorTemperature = remember { listOf<Color>() }
-    val selectedColor = remember { mutableStateOf(Color.Unspecified) }
+    val selectedColor = remember { mutableStateOf(initSelectColor) }
 
     lineLists.clear()
     elementsColor.clear()
@@ -287,7 +299,7 @@ fun ColorPickerWheel(
                                     0f
                                 }
 
-                                calcColor = Color.hsl(hue, 0.72f, 0.63f)
+                                calcColor = Color.hsl(hue, 1f, 0.5f)
                             }
                         } else {
                             calcColor = Color.White
@@ -358,14 +370,16 @@ fun getRandomColor(): Int {
 
 @Composable
 fun TopColorSelectionRow(
+    currentColor : Color,
     showTemperature: Boolean, isLedEnabled: Boolean,
     toggle: (Boolean) -> Unit,
     selectedRGBColor: (Color) -> Unit
 ) {
 
-    val currentSelectedColor = remember { mutableStateOf(Color.Red) }
+    val currentSelectedColor = remember { mutableStateOf(currentColor) }
     if (isLedEnabled) {
         //color from viewmodel
+        currentSelectedColor.value = currentColor
     } else {
         currentSelectedColor.value = Color(0xFF919191)
     }
@@ -376,6 +390,7 @@ fun TopColorSelectionRow(
             .zIndex(1f),
     ) {
         ColorPickerWheel(
+            initSelectColor = Color.Yellow,
             onSelectedColor = {
                 currentSelectedColor.value = it
                 selectedRGBColor.invoke(it)
@@ -408,14 +423,16 @@ fun TopColorSelectionRow(
                     contentDescription = "Button ON/OFF"
                 )
             }
-            Text(
-                modifier = Modifier.padding(top = 10.dp),
-                text = "Scorri la ruota per scegliere una\ntonalità",
-                color = Color.White,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Bold
-            )
+            if (isLedEnabled) {
+                Text(
+                    modifier = Modifier.padding(top = 10.dp),
+                    text = "Scorri la ruota per scegliere una\ntonalità",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -655,6 +672,7 @@ fun OnOffButtonsRow(
     val time = if (value.isNotBlank()) LocalTime.parse(value, formatter) else LocalTime.now()
     val dialogStart = TimePickerDialog(
         LocalContext.current,
+
         { _, hour, minute ->
             onTimeStart(LocalTime.of(hour, minute))
         },
@@ -692,13 +710,12 @@ fun OnOffButtonsRow(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Accensione")
                 Text(
-                    String.format("%02d", switchOnMinute) + ":" + String.format(
+                    String.format("%02d", switchOnHour) + ":" + String.format(
                         "%02d",
                         switchOnMinute
                     )
                 )
             }
-
         }
         Spacer(Modifier.weight(1f))
         Button(

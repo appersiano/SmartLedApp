@@ -1,7 +1,9 @@
 package com.appersiano.smartledapp.views
 
 import android.bluetooth.le.ScanResult
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,17 +11,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.Button
+import androidx.compose.material.Divider
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Surface
+import androidx.compose.material.Switch
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -31,7 +36,9 @@ fun MainScreen(
     onStartScan: () -> Unit = {},
     onStopScan: () -> Unit = {},
     scanStatus: State<SCScan?>,
-    scanResult: SnapshotStateList<ScanResult>
+    scanResult: SnapshotStateList<ScanResult>,
+    checkDebug: (Boolean) -> Unit,
+    checkDebugValue: Boolean
 ) {
     // A surface container using the 'background' color from the theme
     Surface(
@@ -53,29 +60,33 @@ fun MainScreen(
 
             var counter = 1.0f
             var color = Color.Red
-            val coroutine = rememberCoroutineScope()
 
             when (scanStatus.value) {
                 is SCScan.ERROR -> {
                     counter = 1f
                     color = Color.Red
                 }
+
                 SCScan.PAUSE -> {
                     counter = 0.5f
                     color = Color.Yellow
                 }
+
                 SCScan.START -> {
                     counter = 1f
                     color = Color.Green
                 }
+
                 SCScan.STOP -> {
                     counter = 1f
                     color = Color.Red
                 }
+
                 SCScan.UNKNOWN -> {
                     counter = 1f
                     color = Color.Gray
                 }
+
                 null -> {
                     counter = 0f
                 }
@@ -85,6 +96,14 @@ fun MainScreen(
 
             ScanStatusText(scanStatus.value.toString())
 
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Debug Mode", textAlign = TextAlign.Center)
+                Switch(
+                    checked = checkDebugValue,
+                    onCheckedChange = { checkDebug.invoke(it) }
+                )
+            }
+            Divider()
             LazyColumn {
                 items(scanResult) {
                     //Text(it.device.address)
